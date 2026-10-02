@@ -1,0 +1,17 @@
+[
+  {"title": "공유 전기자전거 이용 건수 1년 새 41% 늘어", "url": "https://city-news.example/mobility/7781", "publisher": "가상도시신문",
+   "date": "2026-05-12", "retrieved": "2026-06-01", "kind": "news",
+   "text": "지난해 국내 공유 전기자전거 이용 건수는 2,300만 건으로 전년보다 41% 늘었다. 출퇴근 시간대 이용이 전체의 46%를 차지했다."},
+  {"title": "공유 전기자전거 사고 증가…헬멧 착용률은 18%", "url": "https://safety-daily.example/news/1205", "publisher": "안전일보",
+   "date": "2026-05-20", "retrieved": "2026-06-01", "kind": "news",
+   "text": "공유 전기자전거 관련 사고 신고는 지난해 1,140건으로 집계됐다. 이용자 헬멧 착용률은 18%에 그쳤다."},
+  {"title": "씽씽바이크, 서울 대여소 500곳 추가", "url": "https://newswire.example/release/ssing-500", "publisher": "씽씽바이크(보도자료)",
+   "date": "2026-05-26", "retrieved": "2026-06-01", "kind": "press_release",
+   "text": "씽씽바이크는 연말까지 서울에 대여소 500곳을 추가한다고 밝혔다."},
+  {"title": "씽씽바이크, 서울 대여소 500곳 추가", "url": "https://newswire.example/release/ssing-500?utm_source=rss", "publisher": "씽씽바이크(보도자료)",
+   "date": "2026-05-26", "retrieved": "2026-06-01", "kind": "press_release",
+   "text": "씽씽바이크는 연말까지 서울에 대여소 500곳을 추가한다고 밝혔다."},
+  {"title": "개인형 이동장치 주차 단속 7월부터 강화", "url": "https://gov-briefing.example/press/2026-0528", "publisher": "가상시청",
+   "date": "2026-05-28", "retrieved": "2026-06-01", "kind": "official",
+   "text": "시는 7월부터 보도 위 무단 주차 개인형 이동장치에 대한 견인 기준을 강화한다. 견인료는 1대당 4만 원이다."}
+]

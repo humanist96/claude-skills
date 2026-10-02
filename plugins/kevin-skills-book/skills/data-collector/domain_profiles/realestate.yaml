@@ -17,14 +17,14 @@ keywords:
   - "오피스텔"
 
 sources:
-  free:
+  free:  # 2026-10-02 점검: 404·403·410이거나 피드가 아닌 주소는 뺐다
     - type: rss
-      name: "머니투데이 부동산"
-      url: "https://news.mt.co.kr/newsList.html?type=rss&pDepth=news&pDepth2=real"
+      name: "Google 뉴스(한국어)"
+      url: "https://news.google.com/rss/search?q={keyword}&hl=ko&gl=KR&ceid=KR:ko"
       priority: 1
     - type: web_search
       name: "부동산 시장 동향"
-      query_template: "{keyword} 부동산 시세 동향 2025"
+      query_template: "{keyword} 부동산 시세 동향 {year}"
       priority: 1
     - type: web_search
       name: "부동산 정책"

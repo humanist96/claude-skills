@@ -1,0 +1,44 @@
+name: Daily news digest - {{KEYWORD}}
+
+on:
+  schedule:
+    - cron: '{{CRON}}'  # {{CRON_NOTE}}. GitHub Actions의 cron은 UTC 기준이고 몇 분 늦게 시작할 수 있다.
+  workflow_dispatch:  # Actions 탭의 "Run workflow" 버튼으로 수동 실행
+
+permissions:
+  contents: write  # reports/를 저장소에 커밋하려면 필요하다
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+        run: python run_pipeline.py
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ github.run_number }}
+          path: reports/*.md
+          retention-days: 30
+
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          git diff --cached --quiet || git commit -m "digest: $(date -u +%Y-%m-%d)"
+          git push

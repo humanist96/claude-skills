@@ -21,6 +21,10 @@ keywords:
 sources:
   free:
     - type: rss
+      name: "Google 뉴스(한국어)"
+      url: "https://news.google.com/rss/search?q={keyword}&hl=ko&gl=KR&ceid=KR:ko"
+      priority: 1
+    - type: rss
       name: "Hacker News (GeekNews 한국어)"
       url: "https://news.hada.io/rss"
       priority: 1
@@ -46,7 +50,7 @@ sources:
       priority: 3
     - type: web_search
       name: "기술 트렌드 검색"
-      query_template: "{keyword} trend 2025"
+      query_template: "{keyword} trend {year}"
       priority: 1
     - type: web_search
       name: "GitHub 트렌딩"

@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install pinned doc-automation dependencies (used by Phase 1 checks)
-        run: python -m pip install -r plugins/kevin-skills-book/skills/doc-automation/scripts/requirements.txt -c constraints.txt
+        run: python -m pip install -r plugins/kevin-skills-book/skills/doc-automation/scripts/requirements.txt -r plugins/kevin-skills-book/skills/data-collector/scripts/requirements.txt -c constraints.txt
       - name: Skill conventions (new violations only)
         run: python tools/validate_skills.py --baseline tools/validate-baseline.json
       - name: Validator positive control
@@ -99,10 +99,20 @@ jobs:
         run: python tests/check_repurpose_verify.py
       - name: "content-repurpose: audit inventory"
         run: python tests/check_content_inventory.py
+      - name: "data-collector: practice articles and answer key"
+        run: python tests/check_collector_practice.py
+      - name: "data-collector: source preparation"
+        run: python tests/check_prepare_sources.py
+      - name: "data-collector: trend statistics"
+        run: python tests/check_trend_stats.py
+      - name: "data-collector: report verifier controls"
+        run: python tests/check_report_verify.py
+      - name: "data-collector: automation package"
+        run: python tests/check_build_pipeline.py
       - name: Phase 1 skill quality
-        run: python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose
+        run: python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector
       - name: Phase 1 skill-creator eval sets
-        run: python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose
+        run: python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector
 
   plugin-validate:
     runs-on: ubuntu-latest

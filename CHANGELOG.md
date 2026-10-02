@@ -2,7 +2,17 @@
 
 이 문서는 플러그인 사용자에게 영향을 주는 변경을 기록한다. 버전은 semver를 따른다(스킬 동작 변경은 minor, 이름·입출력 변경은 major).
 
-## 2.0.0-alpha.1 — Phase 1: doc-automation·excel-automation·meeting-minutes·content-repurpose 고도화, hwpx-editor 분리 (v2 브랜치, 미배포)
+## 2.0.0-alpha.1 — Phase 1: doc-automation·excel-automation·meeting-minutes·content-repurpose·data-collector 고도화, hwpx-editor 분리 (v2 브랜치, 미배포)
+
+### data-collector (재설계)
+- 워크플로: 범위(기본값 1회 확인) → 리서치 플랜(`profiles.py`) → 수집(WebSearch·WebFetch 또는 받은 자료) → 정리(`prepare_sources.py`) → 통계(`trend_stats.py`) → 교차 검증 → 출처 각주 보고서 → 검증(`verify_report.py`)
+- 정리: S번호, URL·사본 중복, 기간 밖, 날짜 없음, 신뢰 등급(A 공식~D 보도자료·블로그), 자료 속 지시문 표시(따르지 않음)
+- 검증: 출처 없는 숫자, 인용 소스에 없는 숫자, 기간 밖 자료를 현재처럼, 출처 목록·URL, 투자 권유, 면책, 근거 없는 논조 비율, 지시문 반영, 자리표시
+- 삭제: 단어 사전 센티먼트(긍정·부정 %), 자리표시뿐인 보고서 생성기, 컨테이너 전용 경로, 질문 3개 필수, API 키를 적는 config.yaml
+- 자동화 패키지: 템플릿 복사 + 검사 + 예시 피드 시험 실행. 한국어 구글 뉴스(기간 제한), Slack 새 기사 목록, `SLACK_DRY_RUN`, 커밋 권한
+- 도메인 프로필: 한국어 뉴스 피드 추가, 응답하지 않는 피드 6개 정리, 검색어의 고정 연도 제거
+- 오버라이드: 기본 분야·깊이·기간·언어, 신뢰 소스 등급, 면책 문구, 보고서 구조, 추가 도메인 프로필
+- 평가: v1.6.1 대비 기대 항목 통과율 0.805 → 1.00(4개 eval). 상세 `docs/03-analysis/data-collector-phase1.analysis.md`
 
 ### 이름 변경 (호환성 깨짐)
 - 마켓플레이스 `claude-skills` → `kevin-claude-skills`, 플러그인 `claude-skills-book`·`-creator`·`-practice` → `kevin-skills-book`·`-creator`·`-practice`(폴더 `plugins/kevin-skills-*`). 최신 Claude Code CLI가 `claude-`로 시작하는 플러그인 이름을 예약어로 거부하고, 이름에 `claude-skills`가 들어가면 Anthropic 공식 플러그인처럼 읽힌다고 경고한다. 설치 명령: `/plugin install kevin-skills-book@kevin-claude-skills`. 슬래시 호출도 `/kevin-skills-book:<스킬>`로 바뀐다. 오버라이드 폴더 `.claude/claude-skills/`는 그대로다
@@ -36,6 +46,7 @@
 - 평가: v1.6.1 대비 기대 항목 통과율 0.93 → 1.00(3개 eval), 실행 시간 245초 → 148초. 상세 `docs/03-analysis/excel-automation-phase1.analysis.md`
 
 ### 실습 샘플
+- 6장 리서치 실습: 가상 기사 13건(`collector-articles`)과 정답표(`collector-answer-key`)를 추가했다. 중복·기간 밖·날짜 없는 기사, 상충 수치, 지시문, IR을 일부러 넣었다.
 - 8장 리퍼포징 실습: 제3자 유튜브 녹취 대신 자체 작성 원본 대본(`repurpose-source`)과 정답표(`repurpose-answer-key`, 책 8-1·8-2 집계 정답 포함)를 추가했다.
 - 4장 회의록 실습: 클로바노트 형식 녹취록(`meeting-text`)과 녹음 3개·녹취록 정답표(`meeting-answer-key`)를 추가했다.
 - 3장 엑셀 실습: 진짜 원본 3종(`inputs/*_원본.xlsx`)과 강사용 정답표를 추가했다. v1.6.1에서 실습 입력으로 배포되던 파일은 이미 처리된 결과물이라 완성 예시 세트로 옮겼다.

@@ -24,11 +24,23 @@ INTENDED_REMOVALS = {
     "skills/doc-automation/scripts/fix_docx_round2.py": "작성자 로컬 경로 하드코딩된 원고 교정용 1회성 스크립트",
     "skills/doc-automation/scripts/make_fireworks_report.py": "작성자 로컬 경로 하드코딩된 1회성 보고서 생성 스크립트",
     "skills/doc-automation/scripts/create_sample_templates.py": "tools/dev/create_sample_templates.py 로 이동(개발용)",
+    # Phase 1 data-collector 재설계(docs/03-analysis/data-collector-phase1.analysis.md)
+    "skills/data-collector/scripts/analyzer.py": "단어 사전 센티먼트·공백 분리 빈도 → trend_stats.py(조사 처리, 논조 비율 없음)로 대체",
+    "skills/data-collector/scripts/report_generator.py": "출처 각주 없는 자동 보고서 → Claude 작성 + verify_report.py 검증으로 대체",
+    "skills/data-collector/scripts/collector.py": "모드 2 참조 코드 → templates/pipeline/collector.py(표준 라이브러리, 오프라인 시험)로 대체",
+    "skills/data-collector/scripts/automation_builder.py": "코드를 문자열로 생성 → build_pipeline.py(템플릿 복사·검사·시험 실행)로 대체",
+    "skills/data-collector/scripts/utils.py": "도메인 판별·키워드 확장 → profiles.py로 대체",
+    "skills/data-collector/templates/config.example.yaml": "API 키를 파일에 적는 설정 → 환경변수·Secrets로 대체",
+    "skills/data-collector/references/SETUP-GUIDE.md": "README.md·SKILL.md로 통합",
+    "skills/data-collector/config.yaml": "API 키 칸이 있는 스킬 폴더 설정 → 오버라이드 settings.yaml(기본값)·환경변수(키)로 대체",
 }
 # Phase 1 이동(옛 경로 → 새 경로, 새 경로에 반드시 있어야 함). modified=True면 내용 변경 허용
 INTENDED_MOVES = {
     "skills/doc-automation/scripts/hwpx_template.py": ("plugins/kevin-skills-book/skills/hwpx-editor/scripts/hwpx_template.py", True),
     "skills/doc-automation/scripts/hwpx_parser.py": ("shared/optional/hwpx_parser.py", True),  # 배포용(암호화) 문서 감지 추가
+    "skills/data-collector/templates/github_actions_template.yml": (
+        "plugins/kevin-skills-book/skills/data-collector/templates/pipeline/.github/workflows/daily_collect.yml", True),  # 커밋 권한 추가
+    "skills/data-collector/templates/report_template.md": ("plugins/kevin-skills-book/skills/data-collector/references/report-structure.md", True),
 }
 # 현재 경로 기준
 INTENDED_EDITS = {
@@ -43,7 +55,7 @@ INTENDED_EDITS = {
 }
 SLIMMED_DOCX_DIR = "doc-automation/example/example_3_comany-to-ppt/"  # 내장 글꼴 제거(G12가 별도 검증)
 # Phase 1에서 재설계한 스킬: 파일이 남아 있으면 내용 변경을 허용한다(품질은 각 스킬의 Phase 1 gate가 검증)
-PHASE1_REWRITTEN = {"doc-automation", "excel-automation", "meeting-minutes", "content-repurpose"}
+PHASE1_REWRITTEN = {"doc-automation", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector"}
 
 
 def new_location(old: str) -> Path | None:

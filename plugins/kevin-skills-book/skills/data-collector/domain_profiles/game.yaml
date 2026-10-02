@@ -19,18 +19,18 @@ keywords:
   - "e스포츠"
 
 sources:
-  free:
+  free:  # 2026-10-02 점검: 404·403·410이거나 피드가 아닌 주소는 뺐다
+    - type: rss
+      name: "Google 뉴스(한국어)"
+      url: "https://news.google.com/rss/search?q={keyword}&hl=ko&gl=KR&ceid=KR:ko"
+      priority: 1
     - type: rss
       name: "IGN RSS"
       url: "https://feeds.feedburner.com/ign/all"
       priority: 1
-    - type: rss
-      name: "Kotaku"
-      url: "https://kotaku.com/rss"
-      priority: 2
     - type: web_search
       name: "게임 트렌드 검색"
-      query_template: "{keyword} 게임 트렌드 신작 2025"
+      query_template: "{keyword} 게임 트렌드 신작 {year}"
       priority: 1
     - type: web_search
       name: "스팀 인기"

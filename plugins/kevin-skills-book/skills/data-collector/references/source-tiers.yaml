@@ -1,0 +1,25 @@
+# 소스 신뢰 등급. prepare_sources.py가 kind(자료 종류)를 먼저 보고, 없으면 도메인으로 정한다.
+# 회사·팀 기준으로 바꾸려면 이 파일을 오버라이드 폴더의 references/source-tiers.yaml로 복사해 고친다.
+# 등급은 '믿을 만한 정도'의 출발점일 뿐이다. 중요한 주장은 등급과 관계없이 독립 출처 2곳 이상으로 확인한다.
+tiers:
+  A:
+    label: 공식(정부·공공기관·통계·기업 공시·IR)
+    kinds: [official, government, filing, statistics, ir]
+    domains: [go.kr, korea.kr, kostat.go.kr, dart.fss.or.kr, kind.krx.co.kr, bok.or.kr, sec.gov, data.go.kr, oecd.org, imf.org, worldbank.org]
+  B:
+    label: 언론·리서치 기관
+    kinds: [news, research, report, journal]
+    domains: [yna.co.kr, hankyung.com, mk.co.kr, chosun.com, joongang.co.kr, donga.com, hani.co.kr, khan.co.kr, sedaily.com,
+              edaily.co.kr, mt.co.kr, etnews.com, zdnet.co.kr, bloter.net, thelec.kr, reuters.com, bloomberg.com, ft.com, wsj.com,
+              nytimes.com, cnbc.com, apnews.com, bbc.co.uk, theverge.com, techcrunch.com, trendforce.com, counterpointresearch.com,
+              gartner.com, idc.com, statista.com, mckinsey.com, nature.com, arxiv.org]
+  C:
+    label: 업계 전문 매체·기업 공식 블로그
+    kinds: [trade, company_blog, newsletter]
+    domains: [yozm.wishket.com, news.hada.io, platum.kr, venturesquare.net, byline.network]
+  D:
+    label: 보도자료·개인 블로그·커뮤니티·SNS(단독 근거로 쓰지 않는다)
+    kinds: [press_release, blog, community, sns, video, forum]
+    domains: [newswire.co.kr, prnewswire.com, businesswire.com, globenewswire.com, blog.naver.com, tistory.com, brunch.co.kr,
+              medium.com, velog.io, reddit.com, x.com, twitter.com, youtube.com, instagram.com, facebook.com, threads.net,
+              clien.net, dcinside.com, theqoo.net, fmkorea.com]

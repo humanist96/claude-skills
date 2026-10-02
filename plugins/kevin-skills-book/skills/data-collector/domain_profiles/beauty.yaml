@@ -16,22 +16,18 @@ keywords:
   - "cosmetics"
 
 sources:
-  free:
+  free:  # 2026-10-02 점검: 404·403·410이거나 피드가 아닌 주소는 뺐다
+    - type: rss
+      name: "Google 뉴스(한국어)"
+      url: "https://news.google.com/rss/search?q={keyword}&hl=ko&gl=KR&ceid=KR:ko"
+      priority: 1
     - type: rss
       name: "Allure Beauty"
       url: "https://www.allure.com/feed/rss"
       priority: 1
-    - type: rss
-      name: "Byrdie"
-      url: "https://www.byrdie.com/rss"
-      priority: 2
-    - type: rss
-      name: "식약처 공지사항"
-      url: "https://www.mfds.go.kr/brd/m_99/rss.do"
-      priority: 3
     - type: web_search
       name: "뷰티 트렌드 검색"
-      query_template: "{keyword} 트렌드 2025"
+      query_template: "{keyword} 트렌드 {year}"
       priority: 1
     - type: web_search
       name: "올리브영 트렌드"

@@ -52,8 +52,13 @@ REQUIRED_COMMANDS = [
     "python tests/check_count_chars.py",
     "python tests/check_repurpose_verify.py",
     "python tests/check_content_inventory.py",
-    "python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose",
-    "python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose",
+    "python tests/check_collector_practice.py",
+    "python tests/check_prepare_sources.py",
+    "python tests/check_trend_stats.py",
+    "python tests/check_report_verify.py",
+    "python tests/check_build_pipeline.py",
+    "python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector",
+    "python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector",
 ]
 
 

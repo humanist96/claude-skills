@@ -45,8 +45,13 @@ CHECKS = [
     (["tests/check_count_chars.py"], "COUNT CHARS OK"),
     (["tests/check_repurpose_verify.py"], "REPURPOSE VERIFY CONTROL OK"),
     (["tests/check_content_inventory.py"], "CONTENT INVENTORY OK"),
-    (["tools/check_skill_quality.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose"], "SKILL QUALITY OK"),
-    (["tools/check_skillcreator_evals.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose"], "SKILLCREATOR EVALS OK"),
+    (["tests/check_collector_practice.py"], "COLLECTOR PRACTICE OK"),
+    (["tests/check_prepare_sources.py"], "PREPARE SOURCES OK"),
+    (["tests/check_trend_stats.py"], "TREND STATS OK"),
+    (["tests/check_report_verify.py"], "REPORT VERIFY CONTROL OK"),
+    (["tests/check_build_pipeline.py"], "PIPELINE OK"),
+    (["tools/check_skill_quality.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector"], "SKILL QUALITY OK"),
+    (["tools/check_skillcreator_evals.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector"], "SKILLCREATOR EVALS OK"),
 ]
 
 

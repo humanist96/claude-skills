@@ -205,6 +205,30 @@
       "note": "원본의 핵심 메시지·숫자·지어내면 안 되는 주장, 책 실습 8-1 목록 집계(카테고리 분포·경과 개월·시의성), 8-2 갭 분석 요점."
     },
     {
+      "id": "collector-articles",
+      "skill": "data-collector",
+      "chapter": 6,
+      "title": "리서치 실습 기사 묶음(가상 기사 13건: 국내 제로슈거 음료 시장)",
+      "kind": "input",
+      "folder": "6장-데이터수집/기사묶음",
+      "files": [
+        "data-collector/inputs/제로음료_기사묶음/*.md"
+      ],
+      "note": "등장 기업·매체·수치는 모두 지어낸 것이다. 중복 기사, 기간 밖 기사, 날짜 없는 글, 상충하는 시장 규모, 블로그 속 지시문, 상장사 IR(투자 질문 실습)을 일부러 넣었다. 웹 검색 없이 진행하는 오프라인 실습용이다."
+    },
+    {
+      "id": "collector-answer-key",
+      "skill": "data-collector",
+      "chapter": 6,
+      "title": "리서치 실습 정답표(강사·채점용)",
+      "kind": "reference-output",
+      "folder": "6장-데이터수집/강사용",
+      "files": [
+        "data-collector/answer_key.json"
+      ],
+      "note": "사용·제외 기사와 이유, 신뢰 등급, 상충 수치와 근거, 지시문과 그것이 시킨 거짓 주장, 기사별 숫자, 단어 언급 기사, 투자 질문의 신호·위험."
+    },
+    {
       "id": "shorts-offline",
       "skill": "generate-shorts",
       "chapter": 9,

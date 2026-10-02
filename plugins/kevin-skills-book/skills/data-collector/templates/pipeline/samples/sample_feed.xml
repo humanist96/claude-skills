@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>시험 실행용 예시 피드(가상 기사)</title>
+    <link>https://example.com/</link>
+    <description>네트워크 없이 파이프라인을 시험하는 예시 피드다. 기사는 모두 지어낸 것이다.</description>
+    <item>
+      <title>예시 기사: 신제품 출시가 이어진다</title>
+      <link>https://example.com/news/1?utm_source=rss</link>
+      <pubDate>{{DATE_0}}</pubDate>
+      <description>예시 기사 본문이다. 신제품 출시와 가격 동향을 다룬다.</description>
+      <source url="https://example.com">예시신문</source>
+    </item>
+    <item>
+      <title>예시 기사: 신제품 출시가 이어진다</title>
+      <link>https://example.com/news/1</link>
+      <pubDate>{{DATE_0}}</pubDate>
+      <description>같은 기사의 사본이다(중복 제거 확인용).</description>
+      <source url="https://example.com">예시신문</source>
+    </item>
+    <item>
+      <title>예시 기사: 가격 동향과 소비자 반응</title>
+      <link>https://example.com/news/2</link>
+      <pubDate>{{DATE_1}}</pubDate>
+      <description>가격 동향에 대한 예시 기사다. 신제품 반응도 다룬다.</description>
+      <source url="https://example.com">예시경제</source>
+    </item>
+    <item>
+      <title>예시 기사: 업계 전망</title>
+      <link>https://example.com/news/3</link>
+      <pubDate>{{DATE_2}}</pubDate>
+      <description>업계 전망에 대한 예시 기사다. 가격 동향을 언급한다.</description>
+      <source url="https://example.com">예시일보</source>
+    </item>
+    <item>
+      <title>예시 기사: 오래된 기사(기간 밖)</title>
+      <link>https://example.com/news/old</link>
+      <pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
+      <description>수집 기간 밖이라 빠져야 하는 기사다.</description>
+    </item>
+  </channel>
+</rss>
