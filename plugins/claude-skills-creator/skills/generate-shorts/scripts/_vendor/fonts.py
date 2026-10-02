@@ -103,7 +103,8 @@ def find_font(weight: str = "regular", system: str | None = None) -> str | None:
 def family_for(path: str | None) -> str | None:
     if not path:
         return None
-    return _FAMILY_BY_STEM.get(Path(path).stem)
+    name = str(path).replace("\\", "/").rsplit("/", 1)[-1]  # Linux에서도 Windows 경로를 읽는다
+    return _FAMILY_BY_STEM.get(Path(name).stem)
 
 
 def configure_matplotlib() -> str | None:

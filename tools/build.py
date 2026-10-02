@@ -67,6 +67,10 @@ def existing_vendor_files() -> set[Path]:
     return found
 
 
+def _norm(data: bytes) -> bytes:
+    return data.replace(b"\r\n", b"\n")
+
+
 def main(argv: list[str]) -> int:
     force_utf8_stdout()
     exp = expected_files()
@@ -76,7 +80,7 @@ def main(argv: list[str]) -> int:
         for p, data in exp.items():
             if not p.is_file():
                 problems.append(f"없음: {p}")
-            elif p.read_bytes() != data:
+            elif _norm(p.read_bytes()) != _norm(data):  # Windows checkout(core.autocrlf)은 줄 끝만 CRLF로 바꾼다
                 problems.append(f"원본과 다름: {p}")
         for p in sorted(existing - set(exp)):
             problems.append(f"원본에 없는 사본: {p}")
