@@ -4,6 +4,9 @@
 
 ## 2.0.0-alpha.1 — Phase 1: doc-automation·excel-automation·meeting-minutes·content-repurpose 고도화, hwpx-editor 분리 (v2 브랜치, 미배포)
 
+### 이름 변경 (호환성 깨짐)
+- 마켓플레이스 `claude-skills` → `kevin-claude-skills`, 플러그인 `claude-skills-book`·`-creator`·`-practice` → `kevin-claude-skills-book`·`-creator`·`-practice`(폴더 `plugins/kevin-claude-skills-*`). 최신 Claude Code CLI가 `claude-`로 시작하는 플러그인 이름을 예약어로 거부한다. 설치 명령: `/plugin install kevin-claude-skills-book@kevin-claude-skills`. 슬래시 호출도 `/kevin-claude-skills-book:<스킬>`로 바뀐다. 오버라이드 폴더 `.claude/claude-skills/`는 그대로다
+
 ### content-repurpose (재설계)
 - 워크플로: 원본 정리(`brief.json`: 핵심 메시지·숫자·단서) → 플랫폼 정하기(요청 → 맞춤 기본값 → 한 번 확인, 못 물으면 블로그·X·인스타) → 선택한 플랫폼 스펙만 읽고 작성 → `check_repurpose.py` → 저장·전달
 - 검사: 플랫폼별 실제 한도(X 가중치 280, 인스타 2,200자·해시태그 30개 등)와 권장 분량 구분(`count_chars.py`), 원본에 없는 숫자, 빠진 플랫폼·필수 요소, 자리표시·작성 메모·코드 블록·안내문, 핵심 메시지 누락
@@ -61,9 +64,9 @@
 
 ### 구조 변경 (major)
 - 단일 플러그인을 3개로 분리했다.
-  - `claude-skills-book`(업무): doc-automation, excel-automation, meeting-minutes, data-collector
-  - `claude-skills-creator`(콘텐츠·영상): content-research, content-repurpose, generate-shorts, narration-video
-  - `claude-skills-practice`(실습): practice-samples, doctor (신규)
+  - `kevin-claude-skills-book`(업무): doc-automation, excel-automation, meeting-minutes, data-collector
+  - `kevin-claude-skills-creator`(콘텐츠·영상): content-research, content-repurpose, generate-shorts, narration-video
+  - `kevin-claude-skills-practice`(실습): practice-samples, doctor (신규)
 - 실습 샘플과 예시 결과물을 업무·크리에이터 플러그인에서 빼고 `practice-samples` 스킬로 옮겼다. 업무 플러그인 설치 크기는 약 20MB에서 0.4MB가 됐다.
 - 마켓플레이스 소유자를 humanist96으로 정리했다.
 

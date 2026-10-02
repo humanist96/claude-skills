@@ -10,8 +10,8 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "plugins/claude-skills-book/skills/doc-automation/scripts/extract_sources.py"
-S = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples/doc-automation"
+SCRIPT = ROOT / "plugins/kevin-claude-skills-book/skills/doc-automation/scripts/extract_sources.py"
+S = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation"
 
 
 def main() -> int:

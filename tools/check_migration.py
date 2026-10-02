@@ -16,7 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib import BASELINE_TAG, LEGACY_SKILLS, ROOT, force_utf8_stdout, git, skill_dir  # noqa: E402
 
-SAMPLES = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples"
+SAMPLES = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples"
 
 INTENDED_REMOVALS = {
     "skills/doc-automation/scripts/fix_captions.py": "작성자 로컬 경로 하드코딩된 원고 교정용 1회성 스크립트",
@@ -27,18 +27,18 @@ INTENDED_REMOVALS = {
 }
 # Phase 1 이동(옛 경로 → 새 경로, 새 경로에 반드시 있어야 함). modified=True면 내용 변경 허용
 INTENDED_MOVES = {
-    "skills/doc-automation/scripts/hwpx_template.py": ("plugins/claude-skills-book/skills/hwpx-editor/scripts/hwpx_template.py", True),
+    "skills/doc-automation/scripts/hwpx_template.py": ("plugins/kevin-claude-skills-book/skills/hwpx-editor/scripts/hwpx_template.py", True),
     "skills/doc-automation/scripts/hwpx_parser.py": ("shared/optional/hwpx_parser.py", True),  # 배포용(암호화) 문서 감지 추가
 }
 # 현재 경로 기준
 INTENDED_EDITS = {
-    "plugins/claude-skills-book/skills/doc-automation/SKILL.md": "샘플 위치를 실습 플러그인으로 안내",
-    "plugins/claude-skills-book/skills/meeting-minutes/SKILL.md": "샘플 위치를 실습 플러그인으로 안내",
-    "plugins/claude-skills-book/skills/doc-automation/scripts/generate_report.py": "사용 예시의 samples/ 경로 제거",
-    "plugins/claude-skills-book/skills/doc-automation/scripts/requirements.txt": "의존성 == 고정(tools/check_pins.py가 검증)",
-    "plugins/claude-skills-book/skills/data-collector/scripts/requirements.txt": "의존성 == 고정(tools/check_pins.py가 검증)",
-    "plugins/claude-skills-creator/skills/content-research/scripts/requirements.txt": "의존성 == 고정(tools/check_pins.py가 검증)",
-    "plugins/claude-skills-practice/skills/practice-samples/samples/excel-automation/prompt/2.md":
+    "plugins/kevin-claude-skills-book/skills/doc-automation/SKILL.md": "샘플 위치를 실습 플러그인으로 안내",
+    "plugins/kevin-claude-skills-book/skills/meeting-minutes/SKILL.md": "샘플 위치를 실습 플러그인으로 안내",
+    "plugins/kevin-claude-skills-book/skills/doc-automation/scripts/generate_report.py": "사용 예시의 samples/ 경로 제거",
+    "plugins/kevin-claude-skills-book/skills/doc-automation/scripts/requirements.txt": "의존성 == 고정(tools/check_pins.py가 검증)",
+    "plugins/kevin-claude-skills-book/skills/data-collector/scripts/requirements.txt": "의존성 == 고정(tools/check_pins.py가 검증)",
+    "plugins/kevin-claude-skills-creator/skills/content-research/scripts/requirements.txt": "의존성 == 고정(tools/check_pins.py가 검증)",
+    "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation/prompt/2.md":
         "v1.6.1에서 빈 파일이었다. 스킬 사용 실습 프롬프트로 채움(tests/check_excel_practice_inputs.py가 검증)",
 }
 SLIMMED_DOCX_DIR = "doc-automation/example/example_3_comany-to-ppt/"  # 내장 글꼴 제거(G12가 별도 검증)
@@ -93,7 +93,7 @@ def main() -> int:
             continue
         rel_new = new.relative_to(ROOT).as_posix()
         if rel_new in INTENDED_EDITS or (old.split("/")[1] in PHASE1_REWRITTEN and not rel_new.startswith(
-                "plugins/claude-skills-practice/") and git("hash-object", str(new)).strip() != old_blobs[old]):
+                "plugins/kevin-claude-skills-practice/") and git("hash-object", str(new)).strip() != old_blobs[old]):
             stats["edited"] += 1
             continue
         if SLIMMED_DOCX_DIR in rel_new and new.suffix == ".docx":

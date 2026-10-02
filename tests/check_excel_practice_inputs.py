@@ -21,7 +21,7 @@ from openpyxl import load_workbook
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _excel_fixtures import INPUTS, KEY, P1, P2, P3, ROOT  # noqa: E402
 
-CATALOG = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples/catalog.json"
+CATALOG = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/catalog.json"
 fails: list[str] = []
 
 

@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _meeting_fixtures import AUDIO, KEY, ROOT, TEXT  # noqa: E402
 
-CATALOG = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples/catalog.json"
+CATALOG = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/catalog.json"
 
 
 def check_text_key(k: dict, body: str) -> list[str]:

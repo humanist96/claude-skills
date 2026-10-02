@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "tools" / "validate_skills.py"
 BASELINE = ROOT / "tools" / "validate-baseline.json"
-CLEAN_SKILL = ROOT / "plugins" / "claude-skills-practice" / "skills" / "doctor"
+CLEAN_SKILL = ROOT / "plugins" / "kevin-claude-skills-practice" / "skills" / "doctor"
 
 
 def run(root: Path) -> dict:

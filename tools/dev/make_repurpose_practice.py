@@ -22,7 +22,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs"
+OUT = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs"
 SOURCE_NAME = "원본_유튜브대본_뉴스레터1000명.md"
 
 SOURCE = """# 퇴근 후 1시간으로 뉴스레터 구독자 1,000명 모은 방법

@@ -8,9 +8,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "plugins/claude-skills-book/skills/excel-automation"
+SKILL = ROOT / "plugins/kevin-claude-skills-book/skills/excel-automation"
 SCRIPTS = SKILL / "scripts"
-INPUTS = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples/excel-automation/inputs"
+INPUTS = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation/inputs"
 P1 = INPUTS / "실습1_고객관리_원본.xlsx"
 P2 = INPUTS / "실습2_쇼핑몰매출_원본.xlsx"
 P3 = INPUTS / "실습3_멀티채널판매_원본.xlsx"

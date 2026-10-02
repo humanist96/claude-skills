@@ -43,7 +43,7 @@ def create_4x3_template(output_path: str):
 
 if __name__ == "__main__":
     # 개발용: 실습 플러그인의 doc-automation 샘플 템플릿을 다시 만든다.
-    out = Path(__file__).resolve().parents[2] / "plugins/claude-skills-practice/skills/practice-samples/samples/doc-automation/samples"
+    out = Path(__file__).resolve().parents[2] / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/samples"
     out.mkdir(parents=True, exist_ok=True)
     create_16x9_template(str(out / "template_16x9.pptx"))
     create_4x3_template(str(out / "template_4x3.pptx"))

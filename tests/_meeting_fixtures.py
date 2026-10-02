@@ -8,9 +8,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "plugins/claude-skills-book/skills/meeting-minutes"
+SKILL = ROOT / "plugins/kevin-claude-skills-book/skills/meeting-minutes"
 SCRIPTS = SKILL / "scripts"
-SAMPLES = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples/meeting-minutes"
+SAMPLES = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/meeting-minutes"
 INPUTS = SAMPLES / "inputs"
 AUDIO = SAMPLES / "example"
 TEXT = INPUTS / "마케팅주간회의_녹취록.txt"

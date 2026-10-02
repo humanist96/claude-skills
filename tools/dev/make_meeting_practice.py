@@ -24,7 +24,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "plugins/claude-skills-practice/skills/practice-samples/samples/meeting-minutes/inputs"
+OUT = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/meeting-minutes/inputs"
 TEXT_NAME = "마케팅주간회의_녹취록.txt"
 
 # (화자, 시각, 발언)

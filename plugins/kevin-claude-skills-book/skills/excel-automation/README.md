@@ -1,7 +1,7 @@
 # excel-automation
 
 > 엑셀·CSV를 정리·분석·취합한다. 원본은 그대로 두고, 모든 변경을 기록하고, 결과를 원본과 대조해 검증한다.
-> 플러그인: `claude-skills-book` · 책 3장
+> 플러그인: `kevin-claude-skills-book` · 책 3장
 
 ## 하는 일
 

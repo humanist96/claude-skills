@@ -1,6 +1,6 @@
 # Gates: Phase 1 — meeting-minutes 고도화 (계획서 §1.2(3), §4 Phase 1)
 
-OWNS: plugins/claude-skills-book/skills/meeting-minutes/**, plugins/claude-skills-practice/skills/practice-samples/samples/meeting-minutes/**, plugins/claude-skills-practice/skills/practice-samples/samples/catalog.json, shared/scripts/doctor.py, tools/**, tests/**, .github/workflows/ci.yml, docs/**, CHANGELOG.md, README.md, constraints.txt, GATES.p1-meeting-minutes.md, .workspace/**
+OWNS: plugins/kevin-claude-skills-book/skills/meeting-minutes/**, plugins/kevin-claude-skills-practice/skills/practice-samples/samples/meeting-minutes/**, plugins/kevin-claude-skills-practice/skills/practice-samples/samples/catalog.json, shared/scripts/doctor.py, tools/**, tests/**, .github/workflows/ci.yml, docs/**, CHANGELOG.md, README.md, constraints.txt, GATES.p1-meeting-minutes.md, .workspace/**
 
 Scope: meeting-minutes를 "입력 정규화(음성 STT 또는 텍스트) → 번호 붙은 발언 → 근거가 붙은 구조화 회의록(minutes.json) → 형식별 렌더링 → 검증 게이트"로 고도화한다. 실행 환경 가정을 없애고, 질문을 기본값 1회 확인으로 줄이며, 실습 정답표를 갖추고, v1.6.1 대비 평가에서 더 나은 결과를 증거로 남긴다.
 

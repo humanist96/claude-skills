@@ -579,11 +579,11 @@ Anthropic 공식
 
 | 플러그인 | 포함 | 대상 | 기본 설치 |
 |----------|------|------|-----------|
-| `claude-skills-book` (업무) | doc-automation, excel-automation, meeting-minutes, data-collector, hwpx-editor(분리 시) | 전 직원, 수강생 | 사내 기본 |
-| `claude-skills-creator` (크리에이터) | content-research, content-repurpose, generate-shorts, narration-video | 마케팅·홍보, 수강생 | 선택 |
-| `claude-skills-practice` (실습) | 실습 샘플·정답 예시·실습 프롬프트, 사전 점검 스킬 | 강의 수강생 | 강의 시에만 |
+| `kevin-claude-skills-book` (업무) | doc-automation, excel-automation, meeting-minutes, data-collector, hwpx-editor(분리 시) | 전 직원, 수강생 | 사내 기본 |
+| `kevin-claude-skills-creator` (크리에이터) | content-research, content-repurpose, generate-shorts, narration-video | 마케팅·홍보, 수강생 | 선택 |
+| `kevin-claude-skills-practice` (실습) | 실습 샘플·정답 예시·실습 프롬프트, 사전 점검 스킬 | 강의 수강생 | 강의 시에만 |
 
-- 업무 플러그인 이름을 기존 `claude-skills-book`으로 유지해 책 독자의 설치 명령이 계속 동작하게 한다.
+- (2026-10-02 변경) 처음에는 업무 플러그인 이름을 기존 `claude-skills-book`으로 유지해 책 독자의 설치 명령을 지키려 했다. 그러나 최신 Claude Code CLI가 `claude-`로 시작하는 플러그인 이름을 Anthropic 예약어로 거부해, 마켓플레이스는 `kevin-claude-skills`, 플러그인은 `kevin-claude-skills-book`·`-creator`·`-practice`로 바꿨다. 책 독자의 v1.6.1 설치 명령은 더 이상 동작하지 않으므로 README와 CHANGELOG에 새 명령을 안내한다.
 - 실습 프롬프트 2-2·2-5("플러그인 안의 샘플을 찾아 복사")는 실습 플러그인에서 동작하도록 문구를 "실습 플러그인"으로 갱신한다. eval에 포함해 회귀를 막는다.
 
 **하위 호환·폐기 정책**
@@ -706,7 +706,7 @@ Anthropic 공식
 
 | 항목 | 결과 |
 |------|------|
-| 플러그인 3분할 | `plugins/claude-skills-book`(업무 4), `plugins/claude-skills-creator`(콘텐츠·영상 4), `plugins/claude-skills-practice`(practice-samples, doctor 신규). `claude plugin validate --strict` 통과 |
+| 플러그인 3분할 | `plugins/kevin-claude-skills-book`(업무 4), `plugins/kevin-claude-skills-creator`(콘텐츠·영상 4), `plugins/kevin-claude-skills-practice`(practice-samples, doctor 신규). `claude plugin validate --strict` 통과 |
 | 마이그레이션 | v1.6.1 파일 119개 전부 추적: 동일 105, 의도 수정 3, 글꼴 제거 6, 의도 삭제·이동 5 |
 | 슬림화 | 업무 플러그인 약 20MB → 0.4MB. 예제 docx 내장 글꼴 제거(12개 35MB → 99KB, 본문 텍스트 동일) |
 | 공통 모듈 | `shared/`(env, fonts, paths, overrides, validate_overrides, doctor + 규약 문서 2종) → 스킬 9개에 vendoring 90개 파일 |
@@ -861,14 +861,14 @@ Phase 0 중 새로 발견해 고친 결함
 - 새 이름을 쓴다(예: `doc-automation-finance`). 같은 이름이면 원본과 충돌한다.
 - 원본 스킬은 설정의 스킬 오버라이드로 끄거나 이름만 노출되게 한다. 둘 다 켜 두면 트리거가 분산된다.
 - description에 원본과 무엇이 다른지, 언제 원본 대신 쓰는지를 적는다.
-- 복제본 상단에 기반 버전(예: `based-on: claude-skills-book 2.1.0`)을 기록해 원본 업데이트 시 비교할 수 있게 한다.
+- 복제본 상단에 기반 버전(예: `based-on: kevin-claude-skills-book 2.1.0`)을 기록해 원본 업데이트 시 비교할 수 있게 한다.
 - 복제본에서도 보호 규칙은 그대로 유지한다.
 
 ### 8.4 제공할 도구
 
 | 도구 | 위치 | 역할 |
 |------|------|------|
-| `customize` 도우미 스킬 | 업무 플러그인, `disable-model-invocation: true`로 `/claude-skills-book:customize`에서만 실행 | 6단계 방법론을 대화로 진행한다. 불만 사례를 묻고, 수준을 판단하고, 오버라이드 폴더·파일 골격을 만들고, 검증을 실행한다 |
+| `customize` 도우미 스킬 | 업무 플러그인, `disable-model-invocation: true`로 `/kevin-claude-skills-book:customize`에서만 실행 | 6단계 방법론을 대화로 진행한다. 불만 사례를 묻고, 수준을 판단하고, 오버라이드 폴더·파일 골격을 만들고, 검증을 실행한다 |
 | 오버라이드 검증 스크립트 | `_shared` → 각 스킬 `_vendor` | 오버라이드 파일 형식, 필수 필드, 보호 규칙 충돌, 비밀 정보 포함 여부를 검사한다 |
 | 확장 지점 예제 | 실습 플러그인 | 회사 PPT 템플릿 적용, 부서 회의록 양식, data-collector 도메인 프로필 추가의 완성 예시 |
 | 개인 평가 케이스 템플릿 | 실습 플러그인 | 사용자가 만든 테스트 요청을 `claude plugin eval --eval-dir`로 돌릴 수 있는 골격 |

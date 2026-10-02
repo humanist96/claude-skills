@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-COPY = ROOT / "plugins/claude-skills-practice/skills/practice-samples/scripts/copy_samples.py"
+COPY = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/scripts/copy_samples.py"
 
 
 def run(*args):

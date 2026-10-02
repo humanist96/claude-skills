@@ -1,13 +1,13 @@
 {
   "skill_name": "doc-automation",
-  "note": "files 경로는 저장소 루트 기준. 실습 샘플은 claude-skills-practice 플러그인에 있다. 객관 항목은 tools/grade_doc_runs.py가 자동 채점하고, [판단] 항목은 채점자가 슬라이드 텍스트를 읽고 판정한다.",
+  "note": "files 경로는 저장소 루트 기준. 실습 샘플은 kevin-claude-skills-practice 플러그인에 있다. 객관 항목은 tools/grade_doc_runs.py가 자동 채점하고, [판단] 항목은 채점자가 슬라이드 텍스트를 읽고 판정한다.",
   "evals": [
     {
       "id": 1,
       "name": "fx-pdf-manager-briefing",
       "book_prompt": "2-3",
       "prompt": "이 PDF를 분석해서 과장님께 보고 드려야 해. 과장님이 보고서를 볼 때 보는 주요 포인트는 1. 이번 주 달러/원 환율이 어느 방향으로 움직일 것 같은지 2. 우리 무역회사 입장에서 특히 신경 써야 할 리스크 요인이 뭔지, 이런 포인트들을 참고해서 PPT로 만들어줘.",
-      "files": ["plugins/claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_1_pdf-to-ppt/260316_FX_weekly(KOR).pdf"],
+      "files": ["plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_1_pdf-to-ppt/260316_FX_weekly(KOR).pdf"],
       "expected_output": "과장 보고용 PPT. 달러/원 방향 전망과 무역회사 리스크가 헤드라인 수준에서 명시되고, 숫자는 모두 PDF에 근거한다.",
       "expectations": [
         "출력 폴더에 .pptx 보고서가 있다",
@@ -24,7 +24,7 @@
       "name": "company-intro-from-docs",
       "book_prompt": "2-5 이후 실습",
       "prompt": "2장-기업PPT 폴더에 있는 회사 문서들과 팁스 공고문, 로고를 바탕으로 팁스 지원 심사용 회사 소개 발표자료를 만들어줘. 10장 이내로.",
-      "files": ["plugins/claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_3_comany-to-ppt"],
+      "files": ["plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_3_comany-to-ppt"],
       "input_folder_name": "2장-기업PPT",
       "expected_output": "회사 문서 6개를 근거로 한 10장 이내 발표 PPT(로고 포함). 읽을 수 없는 배포용 공고 파일은 사용자에게 알린다.",
       "expectations": [
@@ -42,7 +42,7 @@
       "name": "weekly-sales-with-exec-email",
       "book_prompt": "2장 본문 주간 보고 실습",
       "prompt": "weekly_sales.csv로 팀장님께 드릴 주간 매출 보고 PPT를 만들고, 임원께 보낼 보고 메일도 써줘.",
-      "files": ["plugins/claude-skills-practice/skills/practice-samples/samples/doc-automation/samples/weekly_sales.csv"],
+      "files": ["plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/samples/weekly_sales.csv"],
       "expected_output": "KPI·추이·분해가 있는 주간 보고 PPT와 결론 먼저 구조의 임원 보고 메일. 모든 숫자는 CSV에서 계산 가능하다.",
       "expectations": [
         "출력 폴더에 .pptx 보고서가 있다",
@@ -59,8 +59,8 @@
       "book_prompt": "2장 본문 회사 템플릿 실습",
       "prompt": "회사 템플릿(template_4x3.pptx)을 적용해서 weekly_sales.csv 주간 매출 보고서를 만들어줘.",
       "files": [
-        "plugins/claude-skills-practice/skills/practice-samples/samples/doc-automation/samples/weekly_sales.csv",
-        "plugins/claude-skills-practice/skills/practice-samples/samples/doc-automation/samples/template_4x3.pptx"
+        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/samples/weekly_sales.csv",
+        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/samples/template_4x3.pptx"
       ],
       "expected_output": "템플릿의 4:3 크기와 레이아웃·제목 칸을 따른 보고서. 템플릿 안내 문구나 빈 칸이 남지 않는다.",
       "expectations": [

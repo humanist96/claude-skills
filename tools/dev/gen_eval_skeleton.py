@@ -42,7 +42,7 @@ input_match: '"skill"\\s*:\\s*"(?:[\\w-]+:)?{skill}"'
 
 
 CASES = {
-    "claude-skills-book": [
+    "kevin-claude-skills-book": [
         ("doc-automation-csv-weekly-report", "doc-automation", ["smoke"], 20, ["Bash", "Write", "Edit", "Read"],
          f"아래 주간 매출 데이터로 팀장님께 보고할 주간 보고 PPT를 만들어서 report/weekly.pptx 로 저장해줘.\n\n```csv\n{CSV}\n```",
          {"pptx-exists.md": "---\ntype: file_exists\npath: report/weekly.pptx\n---\n"}),
@@ -67,7 +67,7 @@ CASES = {
          {"asks-keyword.md": "---\ntype: llm\n---\n분야나 키워드가 주어지지 않았으므로, 응답이 보고서를 바로 쓰지 않고 "
                               "어떤 분야·키워드를 분석할지(그리고 깊이 등) 사용자에게 확인하면 PASS. 임의 분야로 보고서를 쓰면 FAIL.\n"}),
     ],
-    "claude-skills-creator": [
+    "kevin-claude-skills-creator": [
         ("content-research-asks-field", "content-research", ["smoke"], 6, ["Read"],
          "유튜브 콘텐츠 뭐 만들지 주제 좀 뽑아줘",
          {"asks-field.md": "---\ntype: llm\n---\n관심 분야가 주어지지 않았으므로 응답이 분야(그리고 용도·언어 등)를 사용자에게 확인하면 PASS. "
@@ -86,7 +86,7 @@ CASES = {
          {"setup-guide.md": "---\ntype: llm\n---\ngemini-proxy MCP 도구가 없는 환경이다. 응답이 설정 방법(uv 설치, Gemini API 키, MCP 서버 등록)을 "
                             "안내하고 다른 방법으로 영상을 억지로 만들지 않으면 PASS.\n"}),
     ],
-    "claude-skills-practice": [
+    "kevin-claude-skills-practice": [
         ("practice-samples-copy-ch2", "practice-samples", ["smoke"], 8, ["Bash", "Read"],
          "claude skills book 플러그인에 2장 기업 PPT 실습용 예제 파일들이 들어 있을 거야. 내 작업 폴더로 복사해줘.",
          {"copied.md": "---\ntype: file_exists\npath: 2장-기업PPT/1. 사업 개요.docx\n---\n"}),
