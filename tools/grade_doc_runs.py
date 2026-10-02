@@ -26,8 +26,8 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DOC = ROOT / "plugins/kevin-claude-skills-book/skills/doc-automation/scripts"
-HWPX = ROOT / "plugins/kevin-claude-skills-book/skills/hwpx-editor/scripts"
+DOC = ROOT / "plugins/kevin-skills-book/skills/doc-automation/scripts"
+HWPX = ROOT / "plugins/kevin-skills-book/skills/hwpx-editor/scripts"
 PY = sys.executable
 
 sys.path.insert(0, str(HWPX))

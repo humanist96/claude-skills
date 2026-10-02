@@ -1,6 +1,6 @@
 # Gates: Phase 1 — doc-automation 고도화 + hwpx-editor 분리 (계획서 §1.2(1), §4 Phase 1, D2)
 
-OWNS: plugins/kevin-claude-skills-book/skills/doc-automation/**, plugins/kevin-claude-skills-book/skills/hwpx-editor/**, plugins/kevin-claude-skills-book/evals/**, plugins/kevin-claude-skills-practice/skills/practice-samples/samples/catalog.json, shared/optional/**, shared/scripts/doctor.py, tools/**, tests/**, .github/workflows/ci.yml, docs/01-plan/skills-upgrade.plan.md, CHANGELOG.md, README.md, GATES.p1-doc-automation.md, .workspace/**
+OWNS: plugins/kevin-skills-book/skills/doc-automation/**, plugins/kevin-skills-book/skills/hwpx-editor/**, plugins/kevin-skills-book/evals/**, plugins/kevin-skills-practice/skills/practice-samples/samples/catalog.json, shared/optional/**, shared/scripts/doctor.py, tools/**, tests/**, .github/workflows/ci.yml, docs/01-plan/skills-upgrade.plan.md, CHANGELOG.md, README.md, GATES.p1-doc-automation.md, .workspace/**
 
 Scope: doc-automation을 "입력 이해 → 보고 스토리라인 설계 → 렌더링 → 숫자 출처 검증"으로 재설계하고, HWPX 양식 편집을 hwpx-editor로 분리하며, v1.6.1 대비 평가에서 더 나은 결과를 증거로 남긴다.
 

@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "plugins/kevin-claude-skills-book/skills/doc-automation/scripts"
-SAMPLES = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation"
+SCRIPTS = ROOT / "plugins/kevin-skills-book/skills/doc-automation/scripts"
+SAMPLES = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/doc-automation"
 
 SOURCE_TEXT = """# S01 — 주간매출.csv
 이번 주 매출 4,520만 원, 지난주 3,675만 원.

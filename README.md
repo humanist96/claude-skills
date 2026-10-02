@@ -12,14 +12,14 @@ v2부터 용도에 따라 **플러그인 3개**로 나누어 배포합니다.
 
 ```
 /plugin marketplace add humanist96/claude-skills
-/plugin install kevin-claude-skills-book@kevin-claude-skills
+/plugin install kevin-skills-book@kevin-claude-skills
 ```
 
 필요에 따라 추가로 설치합니다.
 
 ```
-/plugin install kevin-claude-skills-creator@kevin-claude-skills     # 콘텐츠·영상(선택)
-/plugin install kevin-claude-skills-practice@kevin-claude-skills    # 책·강의 실습 샘플과 환경 점검
+/plugin install kevin-skills-creator@kevin-claude-skills     # 콘텐츠·영상(선택)
+/plugin install kevin-skills-practice@kevin-claude-skills    # 책·강의 실습 샘플과 환경 점검
 ```
 
 **클로드 코워크(Cowork)**에서는 설정 → 플러그인 → 마켓플레이스 추가에 `humanist96/claude-skills`를 입력하고 필요한 플러그인을 설치하세요.
@@ -42,19 +42,19 @@ v2부터 용도에 따라 **플러그인 3개**로 나누어 배포합니다.
 
 | 플러그인 | 대상 | 스킬 | 하는 일 |
 |----------|------|------|---------|
-| `kevin-claude-skills-book` (업무) | 전 직원 | `doc-automation` | 자료(PDF·Word·PPT·HWPX·엑셀·웹)를 읽고 보고 대상에 맞춘 PPT·보고 메일 생성. 모든 숫자를 출처와 대조 |
+| `kevin-skills-book` (업무) | 전 직원 | `doc-automation` | 자료(PDF·Word·PPT·HWPX·엑셀·웹)를 읽고 보고 대상에 맞춘 PPT·보고 메일 생성. 모든 숫자를 출처와 대조 |
 | | | `hwpx-editor` | 한글(HWPX) 양식은 그대로 두고 글자만 교체·`{{변수}}` 채우기(양식 보존 검증) |
 | | | `excel-automation` | 엑셀 데이터 정리·분석·시각화·멀티탭 취합 |
 | | | `meeting-minutes` | 회의 녹음(로컬 STT)·텍스트를 역할·용도별 회의록으로 정리 |
 | | | `data-collector` | 관심 분야 데이터 수집 → 과거·현재·전망 트렌드 보고서 (+ 자동화 코드 생성) |
-| `kevin-claude-skills-creator` (콘텐츠·영상) | 마케팅·홍보 | `content-research` | 트렌드·뉴스 기반 콘텐츠 주제와 캘린더 |
+| `kevin-skills-creator` (콘텐츠·영상) | 마케팅·홍보 | `content-research` | 트렌드·뉴스 기반 콘텐츠 주제와 캘린더 |
 | | | `content-repurpose` | 원본 콘텐츠를 플랫폼별 게시물로 변환, 콘텐츠 감사·갭 분석 |
 | | | `generate-shorts` | 롱폼 영상 → 세로 쇼츠·카드뉴스 |
 | | | `narration-video` | 텍스트 → AI 이미지·TTS·자막·BGM 나레이션 영상 (Gemini API·MCP 서버 필요) |
-| `kevin-claude-skills-practice` (실습) | 수강생 | `practice-samples` | 책·강의 실습 샘플을 작업 폴더로 복사 |
+| `kevin-skills-practice` (실습) | 수강생 | `practice-samples` | 책·강의 실습 샘플을 작업 폴더로 복사 |
 | | | `doctor` | 스킬 사용 전 PC 준비 상태 점검 |
 
-v1.6.1에서 업그레이드하는 경우: 플러그인 이름이 바뀌었습니다(`claude-skills-book@claude-skills` → `kevin-claude-skills-book@kevin-claude-skills`). 최신 Claude Code가 `claude-`로 시작하는 이름을 받지 않기 때문입니다. 기존 플러그인을 제거하고 위 명령으로 다시 설치하세요. 콘텐츠·영상 스킬 4개는 `kevin-claude-skills-creator`로, 실습 샘플은 `kevin-claude-skills-practice`로 옮겨졌습니다. 해당 플러그인을 추가로 설치하세요.
+v1.6.1에서 업그레이드하는 경우: 플러그인 이름이 바뀌었습니다(`claude-skills-book@claude-skills` → `kevin-skills-book@kevin-claude-skills`). 최신 Claude Code가 `claude-`로 시작하거나 공식 플러그인처럼 읽히는 이름을 받지 않기 때문입니다. 기존 플러그인을 제거하고 위 명령으로 다시 설치하세요. 콘텐츠·영상 스킬 4개는 `kevin-skills-creator`로, 실습 샘플은 `kevin-skills-practice`로 옮겨졌습니다. 해당 플러그인을 추가로 설치하세요.
 
 ## 내 업무에 맞게 바꾸기
 

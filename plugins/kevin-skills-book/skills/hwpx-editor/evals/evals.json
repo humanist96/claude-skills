@@ -7,7 +7,7 @@
       "name": "form-to-fireworks-report",
       "book_prompt": "2-6",
       "prompt": "이 양식은 그대로 두고 내용만 서울불꽃축제 결과 보고서로 바꿔줘.",
-      "files": ["plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/원본_결재문서본문.hwpx"],
+      "files": ["plugins/kevin-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/원본_결재문서본문.hwpx"],
       "expected_output": "같은 양식의 새 .hwpx. 제목·본문이 불꽃축제 결과 보고로 바뀌고, 사용자가 주지 않은 사실은 지어내지 않거나 확인 필요로 표시한다.",
       "expectations": [
         "원본과 다른 이름의 새 .hwpx 파일이 있다",
@@ -22,7 +22,7 @@
       "name": "approval-line-change",
       "book_prompt": "2-7",
       "prompt": "이 결재문서 양식을 그대로 사용해서 서울 불꽃축제 운영 결과 보고서로 바꿔줘. 기관명은 한강사업본부, 담당자는 김한강, 결재자는 박여의로 해줘.",
-      "files": ["plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/원본_결재문서본문.hwpx"],
+      "files": ["plugins/kevin-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/원본_결재문서본문.hwpx"],
       "expected_output": "기관명·담당자·결재자가 바뀐 같은 양식의 .hwpx",
       "expectations": [
         "원본과 다른 이름의 새 .hwpx 파일이 있다",
@@ -37,8 +37,8 @@
       "book_prompt": "2장 본문 템플릿 채우기",
       "prompt": "이 한글 양식에 fireworks_data.json 데이터를 채워서 보고서 만들어줘.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/결재문서_템플릿.hwpx",
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/fireworks_data.json"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/결재문서_템플릿.hwpx",
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template/fireworks_data.json"
       ],
       "expected_output": "{{변수}}가 모두 채워진 .hwpx",
       "expectations": [

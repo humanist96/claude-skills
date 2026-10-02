@@ -1,7 +1,7 @@
 # <스킬명>
 
 > <한 줄 소개>
-> 플러그인: `<kevin-claude-skills-book | kevin-claude-skills-creator | kevin-claude-skills-practice>` · 책 <N>장
+> 플러그인: `<kevin-skills-book | kevin-skills-creator | kevin-skills-practice>` · 책 <N>장
 
 ## 하는 일
 

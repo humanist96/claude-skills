@@ -24,7 +24,7 @@ from pathlib import Path
 from openpyxl import Workbook, load_workbook
 
 ROOT = Path(__file__).resolve().parents[2]
-SAMPLES = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation"
+SAMPLES = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/excel-automation"
 OUT = SAMPLES / "inputs"
 V3 = SAMPLES / "excel-automation-outputs" / "실습3_통합관리_완료_v3.xlsx"
 

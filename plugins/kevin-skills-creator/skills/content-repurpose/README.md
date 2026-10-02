@@ -1,7 +1,7 @@
 # content-repurpose
 
 > 원본 콘텐츠를 플랫폼별 게시글로 바꾸고, 콘텐츠 목록을 감사·갭 분석한다. 글자 수·형식·숫자 출처는 스크립트로 검사한다.
-> 플러그인: `kevin-claude-skills-creator` · 책 8장
+> 플러그인: `kevin-skills-creator` · 책 8장
 
 ## 하는 일
 

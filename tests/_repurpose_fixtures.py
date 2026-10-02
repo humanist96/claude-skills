@@ -8,9 +8,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "plugins/kevin-claude-skills-creator/skills/content-repurpose"
+SKILL = ROOT / "plugins/kevin-skills-creator/skills/content-repurpose"
 SCRIPTS = SKILL / "scripts"
-INPUTS = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs"
+INPUTS = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/content-repurpose/inputs"
 SOURCE = INPUTS / "원본_유튜브대본_뉴스레터1000명.md"
 KEY = json.loads((INPUTS / "answer_key.json").read_text(encoding="utf-8"))
 

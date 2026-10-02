@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _repurpose_fixtures import KEY, ROOT, SOURCE  # noqa: E402
 
-CATALOG = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/catalog.json"
+CATALOG = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/catalog.json"
 
 
 def check_key(k: dict, src: str) -> list[str]:

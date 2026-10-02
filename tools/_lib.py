@@ -15,12 +15,12 @@ BASELINE_TAG = "v1.6.1"
 
 # 플러그인 구성(계획서 §7.3). 스킬 → 플러그인 매핑의 단일 출처.
 PLUGIN_LAYOUT: dict[str, list[str]] = {
-    "kevin-claude-skills-book": ["doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "data-collector"],
-    "kevin-claude-skills-creator": ["content-research", "content-repurpose", "generate-shorts", "narration-video"],
-    "kevin-claude-skills-practice": ["practice-samples", "doctor"],
+    "kevin-skills-book": ["doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "data-collector"],
+    "kevin-skills-creator": ["content-research", "content-repurpose", "generate-shorts", "narration-video"],
+    "kevin-skills-practice": ["practice-samples", "doctor"],
 }
 # 업무·크리에이터 스킬(실습 플러그인 제외). v1.6.1의 8개 + Phase 1에서 분리한 hwpx-editor
-LEGACY_SKILLS = PLUGIN_LAYOUT["kevin-claude-skills-book"] + PLUGIN_LAYOUT["kevin-claude-skills-creator"]
+LEGACY_SKILLS = PLUGIN_LAYOUT["kevin-skills-book"] + PLUGIN_LAYOUT["kevin-skills-creator"]
 # 특정 스킬에만 복사하는 선택 공통 모듈: shared/optional/<파일> → <스킬>/scripts/_vendor/
 OPTIONAL_VENDOR: dict[str, list[str]] = {
     "hwpx_parser.py": ["doc-automation", "hwpx-editor"],

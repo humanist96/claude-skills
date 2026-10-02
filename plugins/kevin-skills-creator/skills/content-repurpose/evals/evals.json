@@ -43,7 +43,7 @@
       "name": "repurpose-blog-x-instagram",
       "prompt": "원본_유튜브대본_뉴스레터1000명.md 이 유튜브 대본을 블로그 글, X 스레드, 인스타그램 캡션으로 바꿔줘.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
       ],
       "expected_output": "세 플랫폼 결과 파일. X 트윗마다 가중치 280 이내, 인스타 2,200자·해시태그 30개 이내, 숫자는 원본 값만, 자리표시·작성 메모·코드 블록·안내문 없음, 블로그에 핵심 메시지 3개와 단서(유료화 안 함·분야마다 다름).",
       "expectations": [
@@ -63,7 +63,7 @@
       "name": "repurpose-linkedin-newsletter",
       "prompt": "원본_유튜브대본_뉴스레터1000명.md 내용을 링크드인 게시물이랑 뉴스레터 한 편으로 만들어줘. 뉴스레터는 우리 구독자에게 보내는 글이야.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
       ],
       "expected_output": "LinkedIn 게시물(1,300자 이내, 훅·해시태그 3~5개)과 뉴스레터(제목 50자·프리헤더 80자 이내, 1:1 어조). 숫자는 원본 값만.",
       "expectations": [
@@ -82,7 +82,7 @@
       "name": "repurpose-short-platforms",
       "prompt": "원본_유튜브대본_뉴스레터1000명.md 대본으로 유튜브 쇼츠 대본, Threads 게시물, 핀터레스트 핀 설명을 만들어줘.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
       ],
       "expected_output": "짧은 형식 3종. Threads 500자·Pinterest 제목 100자·설명 500자 실제 한도 안, 쇼츠는 60초 분량 대본(영상 제작은 하지 않음), 숫자는 원본 값만.",
       "expectations": [
@@ -101,7 +101,7 @@
       "name": "repurpose-english-x-thread",
       "prompt": "원본_유튜브대본_뉴스레터1000명.md 내용을 해외 독자용 영어 X 스레드로 만들어줘.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/content-repurpose/inputs/원본_유튜브대본_뉴스레터1000명.md"
       ],
       "expected_output": "영어 X 스레드 5~10개 트윗, 트윗마다 가중치 280 이내, 숫자는 원본 값만, 핵심 메시지 3개.",
       "expectations": [

@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install pinned doc-automation dependencies (used by Phase 1 checks)
-        run: python -m pip install -r plugins/kevin-claude-skills-book/skills/doc-automation/scripts/requirements.txt -c constraints.txt
+        run: python -m pip install -r plugins/kevin-skills-book/skills/doc-automation/scripts/requirements.txt -c constraints.txt
       - name: Skill conventions (new violations only)
         run: python tools/validate_skills.py --baseline tools/validate-baseline.json
       - name: Validator positive control
@@ -135,7 +135,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [kevin-claude-skills-book, kevin-claude-skills-creator, kevin-claude-skills-practice]
+        plugin: [kevin-skills-book, kevin-skills-creator, kevin-skills-practice]
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:

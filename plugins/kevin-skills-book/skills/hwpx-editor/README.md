@@ -1,7 +1,7 @@
 # hwpx-editor
 
 > 한글(HWPX) 양식은 그대로, 글자만 바꾸기
-> 플러그인: `kevin-claude-skills-book` · 책 2장
+> 플러그인: `kevin-skills-book` · 책 2장
 
 ## 하는 일
 

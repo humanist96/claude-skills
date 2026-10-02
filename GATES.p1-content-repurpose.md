@@ -1,6 +1,6 @@
 # Gates: Phase 1 — content-repurpose 고도화 (계획서 §1.2(6), §4 Phase 1)
 
-OWNS: plugins/kevin-claude-skills-creator/skills/content-repurpose/**, plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/**, plugins/kevin-claude-skills-practice/skills/practice-samples/samples/catalog.json, tools/**, tests/**, .github/workflows/ci.yml, docs/**, CHANGELOG.md, README.md, GATES.p1-content-repurpose.md, .workspace/**
+OWNS: plugins/kevin-skills-creator/skills/content-repurpose/**, plugins/kevin-skills-practice/skills/practice-samples/samples/content-repurpose/**, plugins/kevin-skills-practice/skills/practice-samples/samples/catalog.json, tools/**, tests/**, .github/workflows/ci.yml, docs/**, CHANGELOG.md, README.md, GATES.p1-content-repurpose.md, .workspace/**
 
 Scope: content-repurpose를 "원본 정리(핵심 메시지·숫자) → 플랫폼별 생성(선택한 플랫폼 스펙만 읽음) → 글자 수·형식·원본 충실도 자동 검사"와 "목록 집계 스크립트 기반 감사·갭 분석"으로 고도화한다. 환경 종속 지시와 불필요한 금지 지시를 없애고, 원본 실습 자료와 정답표를 갖추며, v1.6.1 대비 평가에서 결과를 증거로 남긴다.
 

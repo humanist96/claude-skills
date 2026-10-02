@@ -19,8 +19,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "plugins/kevin-claude-skills-creator/skills/content-repurpose/scripts"
-INPUTS = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/content-repurpose/inputs"
+SCRIPTS = ROOT / "plugins/kevin-skills-creator/skills/content-repurpose/scripts"
+INPUTS = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/content-repurpose/inputs"
 KEY = json.loads((INPUTS / "answer_key.json").read_text(encoding="utf-8"))
 sys.path.insert(0, str(SCRIPTS))
 from count_chars import HASHTAG, find_platform, measure, sections  # noqa: E402

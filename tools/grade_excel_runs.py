@@ -31,8 +31,8 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "plugins/kevin-claude-skills-book/skills/excel-automation/scripts"
-INPUTS = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation/inputs"
+SCRIPTS = ROOT / "plugins/kevin-skills-book/skills/excel-automation/scripts"
+INPUTS = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/excel-automation/inputs"
 KEY = json.loads((INPUTS / "answer_key.json").read_text(encoding="utf-8"))
 sys.path.insert(0, str(SCRIPTS))
 from verify_excel import ERRORS, FORBIDDEN, exempt, has_number, numbers_with_units  # noqa: E402

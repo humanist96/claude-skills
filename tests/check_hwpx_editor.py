@@ -16,8 +16,8 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-H = ROOT / "plugins/kevin-claude-skills-book/skills/hwpx-editor/scripts"
-S = ROOT / "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template"
+H = ROOT / "plugins/kevin-skills-book/skills/hwpx-editor/scripts"
+S = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/doc-automation/example/example_4_hwpx-template"
 sys.path.insert(0, str(H))
 import hwpx_template as ht  # noqa: E402
 import verify_hwpx as vh  # noqa: E402

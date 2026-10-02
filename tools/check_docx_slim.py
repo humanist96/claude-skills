@@ -20,7 +20,7 @@ from _lib import BASELINE_TAG, ROOT, force_utf8_stdout, git  # noqa: E402
 
 PAIRS = {
     # 현재 경로: v1.6.1 경로
-    "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/doc-automation/example/example_3_comany-to-ppt":
+    "plugins/kevin-skills-practice/skills/practice-samples/samples/doc-automation/example/example_3_comany-to-ppt":
         "skills/doc-automation/assets/example/example_3_comany-to-ppt",
     "chapter02-doc-automation/example/example_3_comany-to-ppt":
         "chapter02-doc-automation/example/example_3_comany-to-ppt",

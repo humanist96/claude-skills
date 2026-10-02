@@ -1,6 +1,6 @@
 # Gates: Phase 1 — excel-automation 고도화 (계획서 §1.2(2), §4 Phase 1)
 
-OWNS: plugins/kevin-claude-skills-book/skills/excel-automation/**, plugins/kevin-claude-skills-book/evals/**, plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation/**, plugins/kevin-claude-skills-practice/skills/practice-samples/samples/catalog.json, shared/scripts/doctor.py, tools/**, tests/**, .github/workflows/ci.yml, docs/**, CHANGELOG.md, README.md, GATES.p1-excel-automation.md, .workspace/**
+OWNS: plugins/kevin-skills-book/skills/excel-automation/**, plugins/kevin-skills-book/evals/**, plugins/kevin-skills-practice/skills/practice-samples/samples/excel-automation/**, plugins/kevin-skills-practice/skills/practice-samples/samples/catalog.json, shared/scripts/doctor.py, tools/**, tests/**, .github/workflows/ci.yml, docs/**, CHANGELOG.md, README.md, GATES.p1-excel-automation.md, .workspace/**
 
 Scope: excel-automation을 "프로파일 → 기능 판단 → 결정적 엔진(정리·취합) + 분석 도구 → 재계산 → 검증 게이트"로 고도화하고, 결과물이 아니라 진짜 원본인 실습 입력(정답표 포함)을 갖추며, v1.6.1 대비 평가에서 더 나은 결과를 증거로 남긴다.
 

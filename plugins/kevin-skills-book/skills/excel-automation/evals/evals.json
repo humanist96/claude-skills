@@ -7,7 +7,7 @@
       "name": "clean-customer-list",
       "prompt": "실습1_고객관리_원본.xlsx 고객 명단 좀 정리해줘. 중복은 지우고 전화번호랑 가입일 형식도 통일해줘. 이상한 값은 따로 표시해 주고, 뭐가 바뀌었는지 리포트도 같이 만들어줘.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation/inputs/실습1_고객관리_원본.xlsx"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/excel-automation/inputs/실습1_고객관리_원본.xlsx"
       ],
       "expected_output": "새 엑셀 파일에 정리된 31행(완전 중복 2건만 삭제), 전화번호 010-XXXX-XXXX·가입일 YYYY-MM-DD 통일, 고칠 수 없는 값(전화 오류 2, 이메일 오타 2, 모호한 날짜 1, 극단값 1)은 바꾸지 않고 표시, 변경 리포트 포함. 유사 중복(번호 21·33)은 지우지 않고 알린다.",
       "expectations": [
@@ -29,7 +29,7 @@
       "name": "analyze-shop-sales",
       "prompt": "실습2_쇼핑몰매출_원본.xlsx 분석해줘. 월별 매출 추이랑 카테고리별 매출 비교를 차트로 보여주고, 제일 많이 팔린 상품이랑 핵심 인사이트 3~5개 정리해줘.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation/inputs/실습2_쇼핑몰매출_원본.xlsx"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/excel-automation/inputs/실습2_쇼핑몰매출_원본.xlsx"
       ],
       "expected_output": "새 엑셀 파일에 월별 추이·카테고리별 비교 표와 엑셀 기본 차트, 1위 상품(스마트 워치), 숫자가 표와 일치하는 인사이트 3~5개.",
       "expectations": [
@@ -50,7 +50,7 @@
       "name": "consolidate-multichannel",
       "prompt": "실습3_멀티채널판매_원본.xlsx에 채널별로 탭이 나뉘어 있어. 상품코드 기준으로 하나의 통합관리 시트로 취합해줘. 채널마다 등록된 상품이 달라. 채널별 판매량을 한눈에 비교할 수 있으면 좋겠어.",
       "files": [
-        "plugins/kevin-claude-skills-practice/skills/practice-samples/samples/excel-automation/inputs/실습3_멀티채널판매_원본.xlsx"
+        "plugins/kevin-skills-practice/skills/practice-samples/samples/excel-automation/inputs/실습3_멀티채널판매_원본.xlsx"
       ],
       "expected_output": "원본 탭 7개를 그대로 둔 새 파일에, 상품코드 108개(모든 탭 합집합)의 통합 시트. 채널 값은 원본 탭을 참조하는 수식이고, 채널별 판매량 합계가 원본과 같으며 오류 셀이 없다.",
       "expectations": [

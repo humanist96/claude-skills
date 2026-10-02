@@ -1,7 +1,7 @@
 # meeting-minutes
 
 > 회의 녹음이나 녹취 텍스트로 회의록을 만든다. 결정·할 일마다 근거 발언을 붙여 녹취와 대조한다.
-> 플러그인: `kevin-claude-skills-book` · 책 4장
+> 플러그인: `kevin-skills-book` · 책 4장
 
 ## 하는 일
 

@@ -1,7 +1,7 @@
 # doc-automation
 
 > 자료를 읽고, 보고 대상에 맞춘 보고 PPT·이메일을 만든다. 숫자는 모두 출처와 대조한다.
-> 플러그인: `kevin-claude-skills-book` · 책 2장
+> 플러그인: `kevin-skills-book` · 책 2장
 
 ## 하는 일
 
