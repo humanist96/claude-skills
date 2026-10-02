@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _collector_fixtures import KEY, SCRIPTS, by_orig, prepared, run_script  # noqa: E402
 
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS / "_vendor"))
 from numparse import extract, same  # noqa: E402
 from trend_stats import strip_josa, tokens  # noqa: E402
 

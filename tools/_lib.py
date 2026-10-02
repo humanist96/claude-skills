@@ -24,6 +24,10 @@ LEGACY_SKILLS = PLUGIN_LAYOUT["kevin-skills-book"] + PLUGIN_LAYOUT["kevin-skills
 # 특정 스킬에만 복사하는 선택 공통 모듈: shared/optional/<파일> → <스킬>/scripts/_vendor/
 OPTIONAL_VENDOR: dict[str, list[str]] = {
     "hwpx_parser.py": ["doc-automation", "hwpx-editor"],
+    # 리서치 공유 엔진(계획서 D1): 수집 자료 정리·숫자 출처·신뢰 등급
+    "prepare_sources.py": ["data-collector", "content-research"],
+    "numparse.py": ["data-collector", "content-research"],
+    "source-tiers.yaml": ["data-collector", "content-research"],
 }
 # shared 모듈을 vendoring 받는 스킬
 VENDOR_TARGETS = LEGACY_SKILLS + ["doctor"]

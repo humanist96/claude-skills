@@ -1,5 +1,3 @@
 # Pinned 2026-10-01. Keep this file ASCII-only (pip uses the OS locale encoding).
-feedparser==6.0.14
-anthropic==1.11.0
+# Scripts use the standard library plus pyyaml (shared research engine: source tiers).
 pyyaml==6.0.3
-python-dotenv==1.2.4

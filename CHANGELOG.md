@@ -2,7 +2,15 @@
 
 이 문서는 플러그인 사용자에게 영향을 주는 변경을 기록한다. 버전은 semver를 따른다(스킬 동작 변경은 minor, 이름·입출력 변경은 major).
 
-## 2.0.0-alpha.1 — Phase 1: doc-automation·excel-automation·meeting-minutes·content-repurpose·data-collector 고도화, hwpx-editor 분리 (v2 브랜치, 미배포)
+## 2.0.0-alpha.1 — Phase 1: doc-automation·excel-automation·meeting-minutes·content-repurpose·data-collector·content-research 고도화, hwpx-editor 분리 (v2 브랜치, 미배포)
+
+### content-research (재설계, data-collector와 엔진 통합)
+- 역할: 콘텐츠 기획 전용(유튜브·블로그·뉴스레터·SNS 주제, 발행 캘린더). 시장 리서치 보고서는 data-collector
+- 워크플로: 범위(기본값 1회 확인) → 수집(`feeds.py`, 구글 뉴스 한국어 포함, 받은 피드 파일만으로도) → 정리(공유 엔진 `prepare_sources.py`, RSS 파일 직접) → 기획(주제마다 근거 번호·'왜 지금') → 캘린더(`calendar_slots.py`) → 검증(`verify_plan.py`)
+- 삭제: 세션 안 Anthropic API 재호출과 API 키 `.env`, 가상환경·feedparser 설치, 질문 4개 필수, 날짜 박힌 모델 ID
+- 검증: 근거 없는 주제, 기간 밖 근거, 숫자 출처, 예상 조회수 같은 성과 수치, 루머 표시, 중복 주제, 개수, 용도별 필수 요소, 캘린더 날짜·요일, 지시문·할인 코드
+- 공유 엔진: `shared/optional`의 prepare_sources·numparse·source-tiers를 data-collector와 함께 쓴다. 영어 단어 뒤 숫자·영어 퍼센트 인식을 고쳤다(data-collector에도 적용)
+- 평가: v1.6.1 대비 기대 항목 통과율 0.946 → 0.977(4개 eval, 차이 작음). v1.6.1은 API 키 없이 핵심 분석 단계가 동작하지 않았다. 상세 `docs/03-analysis/content-research-phase1.analysis.md`
 
 ### data-collector (재설계)
 - 워크플로: 범위(기본값 1회 확인) → 리서치 플랜(`profiles.py`) → 수집(WebSearch·WebFetch 또는 받은 자료) → 정리(`prepare_sources.py`) → 통계(`trend_stats.py`) → 교차 검증 → 출처 각주 보고서 → 검증(`verify_report.py`)
@@ -46,6 +54,7 @@
 - 평가: v1.6.1 대비 기대 항목 통과율 0.93 → 1.00(3개 eval), 실행 시간 245초 → 148초. 상세 `docs/03-analysis/excel-automation-phase1.analysis.md`
 
 ### 실습 샘플
+- 7장 콘텐츠 리서치 실습: 가상 테크 뉴스 RSS 12건(`research-feed`)과 정답표(`research-answer-key`)를 추가했다. 중복·기간 밖 기사, 루머, 지시문, 할인 코드, 3개월 캘린더 정답을 넣었다.
 - 6장 리서치 실습: 가상 기사 13건(`collector-articles`)과 정답표(`collector-answer-key`)를 추가했다. 중복·기간 밖·날짜 없는 기사, 상충 수치, 지시문, IR을 일부러 넣었다.
 - 8장 리퍼포징 실습: 제3자 유튜브 녹취 대신 자체 작성 원본 대본(`repurpose-source`)과 정답표(`repurpose-answer-key`, 책 8-1·8-2 집계 정답 포함)를 추가했다.
 - 4장 회의록 실습: 클로바노트 형식 녹취록(`meeting-text`)과 녹음 3개·녹취록 정답표(`meeting-answer-key`)를 추가했다.

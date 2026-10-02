@@ -50,8 +50,12 @@ CHECKS = [
     (["tests/check_trend_stats.py"], "TREND STATS OK"),
     (["tests/check_report_verify.py"], "REPORT VERIFY CONTROL OK"),
     (["tests/check_build_pipeline.py"], "PIPELINE OK"),
-    (["tools/check_skill_quality.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector"], "SKILL QUALITY OK"),
-    (["tools/check_skillcreator_evals.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector"], "SKILLCREATOR EVALS OK"),
+    (["tests/check_shared_research_engine.py"], "SHARED ENGINE OK"),
+    (["tests/check_research_practice.py"], "RESEARCH PRACTICE OK"),
+    (["tests/check_research_calendar.py"], "RESEARCH CALENDAR OK"),
+    (["tests/check_plan_verify.py"], "PLAN VERIFY CONTROL OK"),
+    (["tools/check_skill_quality.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research"], "SKILL QUALITY OK"),
+    (["tools/check_skillcreator_evals.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research"], "SKILLCREATOR EVALS OK"),
 ]
 
 

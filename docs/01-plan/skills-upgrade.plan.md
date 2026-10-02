@@ -795,7 +795,21 @@ Phase 0 중 새로 발견해 고친 결함
 | 회귀 | `tools/run_regression.py` 39개 검사 통과 |
 | 남은 것 | content-research 통합(D1) — H13 |
 
-다음 스킬: content-research 통합(D1, 로드맵 순서 5의 나머지) 또는 generate-shorts(순서 6)
+### Phase 1 — content-research(+data-collector 통합, D1) — 2026-10-02
+
+증거: `GATES.p1-content-research.md`, 분석: `docs/03-analysis/content-research-phase1.analysis.md`
+
+| 항목 | 결과 |
+|------|------|
+| 통합(D1) | 수집 정리·숫자·신뢰 등급 엔진을 `shared/optional`로 옮겨 data-collector와 공유. content-research는 콘텐츠 기획 전용 |
+| 재설계 | feeds(분야별 피드 + 구글 뉴스 한국어) → prepare_sources(RSS 파일 직접) → 용도별 기획안 → calendar_slots → verify_plan. API 재호출·API 키·가상환경·질문 4개 필수 삭제 |
+| 실습 | 가상 테크 뉴스 RSS 12건 + 정답표(중복·기간 밖·루머·지시문·할인 코드·캘린더) |
+| 비교 평가 | 4개 eval 평균 0.977 대 0.946(v1.6.1). 유튜브 주제 0.91 대 0.91, 뉴스레터 1.00 대 0.88, 캘린더 1.00 대 1.00, 실제 웹 1.00 대 1.00. 차이 작음(항목 2개) |
+| 점수 밖 차이 | v1.6.1은 4번 모두 API 분석 단계가 실패(키 없음·Windows 긴 경로 설치 실패)해 에이전트가 손으로 대신했고, 3번 가상환경을 설치했다 |
+| 평가 중 발견·수정 | 공유 숫자 엔진의 영어 단어 뒤 숫자 누락(data-collector에도 해당) 등 10건, 채점기 수정 6건(분석 문서 §3·§4) |
+| 회귀 | `tools/run_regression.py` 43개 검사 통과 |
+
+다음 스킬: generate-shorts (로드맵 순서 6)
 
 ---
 

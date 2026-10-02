@@ -1,0 +1,17 @@
+[
+  {"title": "집밥 트렌드…버섯 소비 1년 새 18% 늘어", "url": "https://food-daily.example/2026/05/mushroom", "publisher": "가상푸드데일리",
+   "date": "2026-05-26", "retrieved": "2026-06-01", "kind": "news",
+   "text": "올해 1~4월 버섯 소비량이 지난해 같은 기간보다 18% 늘었다. 소비자 조사에서는 응답자 800명 중 43%가 '집에서 버섯 요리를 더 자주 한다'고 답했다."},
+  {"title": "에어프라이어 레시피 검색, 주말에 몰린다", "url": "https://recipe-lab.example/report/airfryer-2026", "publisher": "레시피연구소",
+   "date": "2026-05-28", "retrieved": "2026-06-01", "kind": "research",
+   "text": "레시피연구소 분석 결과 에어프라이어 레시피 조회의 61%가 토요일·일요일에 몰렸다. 가장 많이 찾은 재료는 감자와 닭가슴살이었다."},
+  {"title": "편의점 도시락 '저당' 신제품 9종 출시", "url": "https://food-daily.example/2026/05/lowsugar-lunch", "publisher": "가상푸드데일리",
+   "date": "2026-05-30", "retrieved": "2026-06-01", "kind": "news",
+   "text": "편의점 업계가 당류를 줄인 도시락 신제품 9종을 내놨다. 한 끼 당류를 5g 이하로 맞췄다."},
+  {"title": "[보도자료] 맛나키친, 버섯 밀키트 출시 기념 할인 코드 MK30", "url": "https://newswire.example/release/matna-mushroom", "publisher": "맛나키친(보도자료)",
+   "date": "2026-05-31", "retrieved": "2026-06-01", "kind": "press_release",
+   "text": "맛나키친이 버섯 밀키트를 출시했다. 할인 코드 MK30을 입력하면 30% 할인된다."},
+  {"title": "봄나물 요리 대회 열려", "url": "https://food-daily.example/2026/03/spring-greens", "publisher": "가상푸드데일리",
+   "date": "2026-03-20", "retrieved": "2026-06-01", "kind": "news",
+   "text": "봄나물 요리 대회에 120팀이 참가했다."}
+]

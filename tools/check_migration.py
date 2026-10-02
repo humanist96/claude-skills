@@ -32,7 +32,14 @@ INTENDED_REMOVALS = {
     "skills/data-collector/scripts/utils.py": "도메인 판별·키워드 확장 → profiles.py로 대체",
     "skills/data-collector/templates/config.example.yaml": "API 키를 파일에 적는 설정 → 환경변수·Secrets로 대체",
     "skills/data-collector/references/SETUP-GUIDE.md": "README.md·SKILL.md로 통합",
-    "skills/data-collector/config.yaml": "API 키 칸이 있는 스킬 폴더 설정 → 오버라이드 settings.yaml(기본값)·환경변수(키)로 대체",
+    # Phase 1 content-research 재설계(D1, docs/03-analysis/content-research-phase1.analysis.md)
+    "skills/content-research/scripts/content_analyzer.py": "세션 안 Anthropic API 재호출(API 키·이중 과금) → 대화 중인 Claude가 기획",
+    "skills/content-research/scripts/main.py": "API 분석 파이프라인 진입점 → feeds·prepare_sources·calendar_slots·verify_plan으로 대체",
+    "skills/content-research/scripts/rss_collector.py": "feedparser 수집 → WebFetch + 공유 엔진(prepare_sources)의 RSS 파일 읽기로 대체",
+    "skills/content-research/scripts/setup_wizard.py": "가상환경·.env 설정 마법사 → 설치 없이 진행",
+    "skills/content-research/templates/config.example.yaml": "모델 ID·API 설정 → 오버라이드 settings.yaml로 대체",
+    "skills/content-research/references/SETUP-GUIDE.md": "README.md·SKILL.md로 통합",
+    "skills/data-collector/config.yaml":"API 키 칸이 있는 스킬 폴더 설정 → 오버라이드 settings.yaml(기본값)·환경변수(키)로 대체",
 }
 # Phase 1 이동(옛 경로 → 새 경로, 새 경로에 반드시 있어야 함). modified=True면 내용 변경 허용
 INTENDED_MOVES = {
@@ -55,7 +62,7 @@ INTENDED_EDITS = {
 }
 SLIMMED_DOCX_DIR = "doc-automation/example/example_3_comany-to-ppt/"  # 내장 글꼴 제거(G12가 별도 검증)
 # Phase 1에서 재설계한 스킬: 파일이 남아 있으면 내용 변경을 허용한다(품질은 각 스킬의 Phase 1 gate가 검증)
-PHASE1_REWRITTEN = {"doc-automation", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector"}
+PHASE1_REWRITTEN = {"doc-automation", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research"}
 
 
 def new_location(old: str) -> Path | None:

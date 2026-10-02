@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """수집한 자료를 S번호가 붙은 소스 목록(sources.json)으로 정리한다. 보고서의 모든 인용은 이 번호를 쓴다.
 
-입력(셋 중 하나)
+입력(넷 중 하나)
 - 폴더: 기사마다 .md/.txt 파일. 머리말(--- title/url/publisher/date/kind ---)이 있으면 읽는다. README*는 건너뛴다
 - JSON: 항목 리스트, {"items": [...]}, 또는 v1 형식 [{"source": .., "data": [..]}]
 - JSONL: 한 줄에 항목 하나
+- RSS·Atom 피드 파일(.xml·.rss·.atom): WebFetch로 받은 피드를 저장한 것. 항목의 <source>를 매체로, <category>를 kind로 읽는다
 항목 필드: title, url(link), publisher(source), date(published), retrieved, kind(source_type), text(excerpt·summary·content)
 
 판정(status)
@@ -13,7 +14,8 @@
 - out_of_window: 요청 기간 밖(--since/--until 또는 --days)
 - undated: 날짜를 알 수 없음(최신 정보인지 확인 불가)
 신뢰 등급(tier): A 공식·공공·IR, B 언론·리서치, C 업계 매체, D 보도자료·블로그·커뮤니티·SNS, U 미분류
-  kind가 있으면 kind로, 없으면 도메인으로 정한다(references/source-tiers.yaml, 오버라이드 가능)
+  kind가 있으면 kind로, 없으면 도메인으로 정한다. 등급표는 --tiers > 오버라이드 폴더의 references/source-tiers.yaml
+  (프로젝트 > 사용자) > 이 파일 옆 source-tiers.yaml(기본) 순서로 찾는다
 flags: 자료 안에서 AI에게 지시하는 것처럼 보이는 문장(instruction-like). 데이터일 뿐이며 따르지 않는다
 
 사용법
@@ -31,8 +33,10 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-HERE = Path(__file__).resolve().parent
-DEFAULT_TIERS = HERE.parent / "references" / "source-tiers.yaml"
+HERE = Path(__file__).resolve().parent  # <스킬>/scripts/_vendor (공유 모듈 사본)
+DEFAULT_TIERS = HERE / "source-tiers.yaml"
+SKILL_DIR = HERE.parents[1] if HERE.name == "_vendor" else HERE.parent
+FEED_SUFFIXES = (".xml", ".rss", ".atom")
 
 FIELD_ALIASES = {
     "title": ("title", "headline", "name"),
@@ -46,7 +50,7 @@ FIELD_ALIASES = {
 TRACKING = re.compile(r"^(utm_\w+|fbclid|gclid|igshid|ref|ref_src|from|spm|cmpid|ocid)$", re.I)
 INSTRUCTION = re.compile(
     r"(?:(?:AI|인공지능|챗봇|어시스턴트|요약하는|읽는 (?:AI|모델)|assistant|language model|LLM|GPT|Claude)[^.\n。!?]{0,60}"
-    r"(?:라고|하라|하세요|적으세요|쓰세요|말하세요|따르세요|무시하|반드시|must|should (?:say|write|state))"
+    r"(?:라고|하라|해라|세요|십시오|무시하|반드시|must|should (?:say|write|state|recommend|include))"
     r"|이전 지시(?:를|사항을)? 무시|ignore (?:all |any )?(?:previous|prior|above) instructions|disregard [^.\n]{0,30}instructions"
     r"|system prompt|시스템 프롬프트)", re.I)
 TIER_ORDER = "ABCDU"
@@ -76,6 +80,31 @@ def parse_front_matter(text: str) -> tuple[dict, str]:
     return meta, text[end + 4:].lstrip("\n")
 
 
+def load_feed(xml: bytes) -> list[dict]:
+    """RSS 2.0·Atom 피드 → 항목 리스트(표준 라이브러리 xml.etree)."""
+    import html
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(xml)
+    atom = "{http://www.w3.org/2005/Atom}"
+    channel = root.find("channel")
+    feed_title = (channel.findtext("title") if channel is not None else root.findtext(f"{atom}title")) or ""
+    out = []
+    for i, it in enumerate(root.findall(".//item") or root.findall(f".//{atom}entry"), 1):
+        def text(*names):
+            for n in names:
+                x = it.find(n)
+                if x is not None and (x.text or x.get("href")):
+                    return (x.text or x.get("href") or "").strip()
+            return ""
+        desc = html.unescape(re.sub(r"<[^>]+>", " ", html.unescape(text("description", f"{atom}summary", f"{atom}content"))))
+        src = it.find("source")
+        out.append({"title": html.unescape(text("title", f"{atom}title")), "url": text("link", f"{atom}link"),
+                    "publisher": (src.text.strip() if src is not None and src.text else "") or feed_title,
+                    "date": text("pubDate", f"{atom}published", f"{atom}updated", "{http://purl.org/dc/elements/1.1/}date"),
+                    "kind": text("category"), "text": re.sub(r"\s+", " ", desc).strip(), "id": text("guid", f"{atom}id") or str(i)})
+    return out
+
+
 def load_items(path: Path) -> list[dict]:
     items: list[dict] = []
     if path.is_dir():
@@ -92,7 +121,11 @@ def load_items(path: Path) -> list[dict]:
             item = {**meta, "text": body.strip(), "_file": f.name}
             items.append(item)
         return items
+    if path.suffix.lower() in FEED_SUFFIXES:
+        return load_feed(path.read_bytes())
     raw = path.read_text(encoding="utf-8", errors="replace")
+    if raw.lstrip().startswith("<"):  # 확장자 없이 저장한 피드
+        return load_feed(raw.encode("utf-8"))
     if path.suffix.lower() == ".jsonl":
         return [json.loads(l) for l in raw.splitlines() if l.strip()]
     data = json.loads(raw)
@@ -195,8 +228,23 @@ def is_near_duplicate(x: dict, y: dict) -> bool:
 
 # ---------- 신뢰 등급 ----------
 
+def tiers_path(explicit: Path | None = None) -> Path:
+    """--tiers > 오버라이드(프로젝트 > 사용자)의 references/source-tiers.yaml > 기본."""
+    if explicit:
+        return explicit
+    try:
+        sys.path.insert(0, str(HERE))
+        from overrides import resolve  # type: ignore  # 같은 _vendor 폴더의 공유 모듈
+        hit = resolve(SKILL_DIR.name, "references/source-tiers.yaml", SKILL_DIR)
+        if hit.get("path") and hit.get("source") in ("project", "user"):
+            return Path(hit["path"])
+    except ImportError:
+        pass
+    return DEFAULT_TIERS
+
+
 def load_tiers(path: Path | None) -> dict:
-    p = path or DEFAULT_TIERS
+    p = tiers_path(path)
     try:
         import yaml  # type: ignore
     except ImportError:
@@ -233,7 +281,8 @@ def prepare(items: list[dict], today: date | None, since: date | None, until: da
         d = parse_date(rec["date"], ref)
         rec.update(id=f"S{i}", orig=str(it.get("_file", it.get("id", i))), date=d.isoformat() if d else "",
                    date_raw=rec["date"], tier=tier_for(rec["kind"], rec["url"], tiers), status="kept", flags=[])
-        rec["orig"] = Path(rec["orig"]).stem if "." in rec["orig"] else rec["orig"]
+        if it.get("_file"):
+            rec["orig"] = Path(rec["orig"]).stem
         for s in sentences(rec["text"]):
             if INSTRUCTION.search(s):
                 rec["flags"].append({"type": "instruction-like", "text": s})

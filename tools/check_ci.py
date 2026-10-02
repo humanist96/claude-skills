@@ -57,8 +57,12 @@ REQUIRED_COMMANDS = [
     "python tests/check_trend_stats.py",
     "python tests/check_report_verify.py",
     "python tests/check_build_pipeline.py",
-    "python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector",
-    "python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector",
+    "python tests/check_shared_research_engine.py",
+    "python tests/check_research_practice.py",
+    "python tests/check_research_calendar.py",
+    "python tests/check_plan_verify.py",
+    "python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research",
+    "python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research",
 ]
 
 

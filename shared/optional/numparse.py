@@ -15,14 +15,14 @@ EN_BIG = {"trillion": 1e12, "billion": 1e9, "million": 1e6, "thousand": 1e3, "tn
 MEASURE_UNITS = ("mL", "ml", "kg", "km", "mg", "g", "L", "GB", "TB", "MB", "nm", "kWh", "MW", "GW", "TB/s", "GB/s", "℃", "도")
 DATE_UNITS = ("년", "월", "일", "분기", "반기", "주차")
 MONEY_WORDS = ("원", "달러", "엔", "위안", "유로")
-SPACED_UNITS = set("원달러엔위안유로캔명개건곳종배병권회톤장편대")
+SPACED_UNITS = set("원달러엔위안유로캔명개건곳종배병권회톤장편대퍼")
 
 NUM = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
 KO_COMPOSITE = re.compile(rf"(?:(?:{NUM})\s?(?:조|억|만|천)\s?)+(?:{NUM})?")
 TOKEN = re.compile(
     rf"(?P<cur>[$€£¥₩])?\s?(?P<num>(?:(?:{NUM})\s?(?:조|억|만|천)\s?)+(?:{NUM})?|{NUM})"
     r"(?P<en>\s?(?:trillion|billion|million|thousand|tn|bn|[bBmMkK])(?![A-Za-z]))?"
-    r"(?P<sfx>\s?(?:%p|%|퍼센트|퍼센트포인트|%포인트|[A-Za-z]{1,4}/s|[A-Za-z]{1,3}|℃|[가-힣]{1,3}))?")
+    r"(?P<sfx>\s?(?:%p|%|퍼센트포인트|퍼센트|%포인트|percentage points?|percent|pct|[A-Za-z]{1,4}/s|[A-Za-z]{1,3}|℃|[가-힣]{1,3}))?")
 QUARTER = re.compile(r"\b[1-4]Q\d{2}\b|\bQ[1-4]\b|\bFY\d{2,4}\b|\b[1-4]H\d{2}\b"
                      r"|\b(?:19|20)\d{2}\s?[.\-/]\s?(?:[1-4][QH]|0?[1-9]|1[0-2])(?:\s?[.\-/]\s?\d{1,2})?(?![\d%])", re.I)  # 2025.11, 2026-07-08, 2025.3Q는 날짜
 CITATION = re.compile(r"\[(?:S\d+(?:\s*[,，·]\s*S\d+)*)\]")
@@ -54,8 +54,8 @@ def ko_value(s: str) -> float:
 
 def _kind(sfx: str, cur: str) -> tuple[str, str]:
     s = sfx.strip()
-    if s.startswith(("%", "퍼센트")):
-        return "percent", "%p" if "p" in s or "포인트" in s else "%"
+    if s.startswith(("%", "퍼센트", "percent", "pct")):
+        return "percent", "%p" if s.startswith("%p") or "포인트" in s or "points" in s or s.endswith("point") else "%"
     if cur or s.startswith(MONEY_WORDS) or s in ("USD", "KRW", "EUR", "JPY"):
         return "money", cur or s
     if s.startswith(DATE_UNITS):
@@ -74,9 +74,11 @@ def extract(text: str) -> list[Num]:
         raw_num = m.group("num").strip()
         if not raw_num or not re.search(r"\d", raw_num):
             continue
-        prev = masked[max(0, m.start() - 1):m.start()]
+        # 숫자(통화 기호 포함) 바로 앞 글자. 정규식 앞의 선택 공백 때문에 m.start()가 공백을 가리킬 수 있다
+        st = m.start("cur") if m.group("cur") else m.start("num")
+        prev = masked[max(0, st - 1):st]
         if prev and (prev.isalpha() and prev.isascii() or prev in "._/-#"):  # GPT-4o, v2.1, 3.5-turbo의 일부
-            if not (prev == "-" and m.start() >= 2 and masked[m.start() - 2].isspace()):
+            if not (prev == "-" and st >= 2 and masked[st - 2].isspace()):
                 continue
         sfx = (m.group("sfx") or "")
         en = (m.group("en") or "").strip()
@@ -94,9 +96,11 @@ def extract(text: str) -> list[Num]:
             s, sfx = "", ""  # "13.6B 매출", "3 사람"처럼 띄어 쓴 일반 단어는 단위가 아니다
         if en and s and re.fullmatch(r"[가-힣]{1,3}", s):
             s, sfx = "", ""
-        if s and re.fullmatch(r"[가-힣]{1,3}", s):
+        if s and sfx[:1].isspace() and re.fullmatch(r"[A-Za-z]{1,4}(/s)?", s) and s not in MEASURE_UNITS and s not in ("USD", "KRW", "EUR", "JPY"):
+            s, sfx = "", ""  # "2026 AI", "20 of"처럼 띄어 쓴 영어 단어는 단위가 아니다
+        if s and not s.startswith("퍼센트") and re.fullmatch(r"[가-힣]{1,3}", s):
             s = s[:2] if s[:2] in ("분기", "반기", "주차", "시간", "개월", "퍼센") else s[:1]
-            if s in ("이", "가", "은", "는", "을", "를", "의", "에", "로", "와", "과", "도", "만", "보", "대", "까", "부", "씩", "여", "쯤", "께"):
+            if s in ("이", "가", "은", "는", "을", "를", "의", "에", "로", "와", "과", "도", "만", "보", "까", "부", "씩", "여", "쯤", "께"):
                 s = ""
         kind, unit = _kind(s, cur)
         if kind == "count" and en and not s:

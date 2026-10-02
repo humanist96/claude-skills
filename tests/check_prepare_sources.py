@@ -9,9 +9,10 @@ from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _collector_fixtures import ARTICLES, KEY, SCRIPTS, by_orig, prepared, run_script  # noqa: E402
+from _collector_fixtures import ARTICLES, KEY, ROOT as ROOT_DIR, SCRIPTS, by_orig, prepared, run_script  # noqa: E402
 
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS / "_vendor"))
 from prepare_sources import canonical_url, parse_date  # noqa: E402
 
 results: list[tuple[str, bool, str]] = []
@@ -64,6 +65,25 @@ def main() -> int:
         (T / "empty.json").write_text("[]", encoding="utf-8")
         r = run_script("prepare_sources.py", T / "empty.json", "--out", T / "o4.json")
         results.append(("빈 입력은 실패로", r.returncode == 1, r.stdout[-120:]))
+    # RSS 피드 파일 입력(content-research 실습 피드, R3)
+    import json as _json
+    rkey = _json.loads((ROOT_DIR / "plugins/kevin-skills-practice/skills/practice-samples/samples/content-research/answer_key.json").read_text(encoding="utf-8"))
+    feed = ROOT_DIR / "plugins/kevin-skills-practice/skills/practice-samples/samples/content-research/inputs/주간_테크뉴스.xml"
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:
+        out = Path(td) / "rss.json"
+        r = run_script("prepare_sources.py", feed, "--out", out, "--today", rkey["as_of"], "--since", rkey["window"]["since"],
+                       "--until", rkey["window"]["until"])
+        rs = {s["orig"]: s for s in _json.loads(out.read_text(encoding="utf-8"))["sources"]} if out.is_file() else {}
+        st = rkey["status"]
+        want = {**{a: "kept" for a in st["kept"]}, **{a: "duplicate" for a in st["duplicate"]}, **{a: "out_of_window" for a in st["out_of_window"]}}
+        got = {a: s["status"] for a, s in rs.items()}
+        results.append(("RSS: 상태 12건 정답표와 일치", got == want, f"{r.stdout[-200:]} 다름 {[(a, got.get(a), w) for a, w in want.items() if got.get(a) != w]}"))
+        id2orig = {s["id"]: a for a, s in rs.items()}
+        results.append(("RSS: 중복 원본·이유", all(id2orig.get(rs[d].get("duplicate_of")) == o and rs[d].get("duplicate_reason") == rkey["duplicate_reason"][d]
+                                                 for d, o in st["duplicate"].items()) if rs else False, ""))
+        results.append(("RSS: 등급(<category>→kind)", {a: s["tier"] for a, s in rs.items()} == rkey["tiers"], ""))
+        results.append(("RSS: 매체(<source>)", rs.get("R03", {}).get("publisher") == "바다소프트(보도자료)", str(rs.get("R03", {}).get("publisher"))))
+        results.append(("RSS: 지시문 FLAG는 R07", [a for a, s in rs.items() if s["flags"]] == list(rkey["instruction_like"]), ""))
     cases = [("https://www.A.example/x/?utm_source=a&id=3#top", "https://a.example/x?id=3"),
              ("http://m.a.example/x?fbclid=1", "https://a.example/x")]
     for raw, want in cases:

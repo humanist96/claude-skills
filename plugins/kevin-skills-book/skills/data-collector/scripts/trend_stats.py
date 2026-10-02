@@ -22,6 +22,7 @@ from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))  # 공유 엔진(numparse·prepare_sources)
 from numparse import extract, is_year  # noqa: E402
 from prepare_sources import sentences  # noqa: E402
 

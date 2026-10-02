@@ -17,7 +17,8 @@ SKILL_EXAMPLES = SKILL / "examples"
 
 
 def run_script(name: str, *args, cwd=None) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(SCRIPTS / name), *map(str, args)], capture_output=True, text=True,
+    path = SCRIPTS / name if (SCRIPTS / name).is_file() else SCRIPTS / "_vendor" / name  # 공유 엔진은 _vendor
+    return subprocess.run([sys.executable, str(path), *map(str, args)], capture_output=True, text=True,
                           encoding="utf-8", errors="replace", cwd=cwd)
 
 

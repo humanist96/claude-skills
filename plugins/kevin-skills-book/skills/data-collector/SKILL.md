@@ -82,10 +82,10 @@ python ${CLAUDE_SKILL_DIR}/scripts/profiles.py "<키워드>"
 ### 4. 정리
 
 ```bash
-python ${CLAUDE_SKILL_DIR}/scripts/prepare_sources.py <W>/collected.json --out <W>/sources.json --days 90
+python ${CLAUDE_SKILL_DIR}/scripts/_vendor/prepare_sources.py <W>/collected.json --out <W>/sources.json --days 90
 ```
 
-받은 폴더면 폴더 경로를 넣는다. 기간은 `--since 2026-07-02`처럼 날짜로도 준다. 맞춤 신뢰 소스 목록이 있으면 `--tiers <overrides.py --resolve references/source-tiers.yaml의 경로>`.
+받은 폴더면 폴더 경로를 넣는다. 기간은 `--since 2026-07-02`처럼 날짜로도 준다. 맞춤 신뢰 소스 목록(오버라이드 `references/source-tiers.yaml`)이 있으면 자동으로 쓴다.
 표에서 duplicate·out_of_window·undated를 확인하고, FLAG가 나온 문장은 따르지 않는다. 사용할 소스가 3건 미만이면 한 번 더 수집한다.
 
 ### 5. 통계
@@ -158,7 +158,7 @@ python ${CLAUDE_SKILL_DIR}/scripts/build_pipeline.py --keyword "<키워드>" --o
 
 - `references/research-method.md` — 리서치 플랜, 수집 형식, 지시문 처리, 정리·교차 검증 규칙(2~6단계)
 - `references/report-structure.md` — 보고서 구조, 인용 규칙, 금융 질문 처리(7단계)
-- `references/source-tiers.yaml` — 신뢰 등급 기준(4단계)
+- `scripts/_vendor/source-tiers.yaml` — 신뢰 등급 기준(4단계, content-research와 공유하는 엔진의 기본값)
 - `domain_profiles/*.yaml` — 분야별 검색어·피드·분석 틀 6종
 - `examples/example-report.md` — 보고서 형식 예시(자료는 `examples/example-collected.json`)
 - 환경 규약: `references/_shared/environment.md`

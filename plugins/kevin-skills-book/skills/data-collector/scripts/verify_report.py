@@ -32,6 +32,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))  # 공유 엔진(numparse·prepare_sources)
 from numparse import extract, found_in, trivial  # noqa: E402
 
 CITE = re.compile(r"\[(S\d+(?:\s*[,，·/]\s*S?\d+)*)\]")

@@ -109,10 +109,18 @@ jobs:
         run: python tests/check_report_verify.py
       - name: "data-collector: automation package"
         run: python tests/check_build_pipeline.py
+      - name: "content-research: shared research engine"
+        run: python tests/check_shared_research_engine.py
+      - name: "content-research: practice feed and answer key"
+        run: python tests/check_research_practice.py
+      - name: "content-research: calendar slots"
+        run: python tests/check_research_calendar.py
+      - name: "content-research: plan verifier controls"
+        run: python tests/check_plan_verify.py
       - name: Phase 1 skill quality
-        run: python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector
+        run: python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research
       - name: Phase 1 skill-creator eval sets
-        run: python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector
+        run: python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research
 
   plugin-validate:
     runs-on: ubuntu-latest

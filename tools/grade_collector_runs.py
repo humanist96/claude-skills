@@ -26,6 +26,7 @@ SCRIPTS = ROOT / "plugins/kevin-skills-book/skills/data-collector/scripts"
 PRACTICE = ROOT / "plugins/kevin-skills-practice/skills/practice-samples/samples/data-collector"
 ARTICLES = PRACTICE / "inputs" / "제로음료_기사묶음"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS / "_vendor"))
 from numparse import extract, found_in, trivial  # noqa: E402
 from prepare_sources import canonical_url, parse_front_matter  # noqa: E402
 from verify_report import ADVICE, CALC, DISCLAIMER, NEGATION, SENTIMENT, blocks, split_sentences  # noqa: E402
