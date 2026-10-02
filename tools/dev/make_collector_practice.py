@@ -195,8 +195,10 @@ def main(argv: list[str]) -> int:
     if "--check" in argv:
         with tempfile.TemporaryDirectory() as td:
             write(Path(td))
+            def norm(b: bytes) -> bytes:  # Windows 체크아웃(core.autocrlf)은 줄 끝만 CRLF로 바꾼다
+                return b.replace(b"\r\n", b"\n")
             diff = [str(p.relative_to(OUT)) for p, q in zip(files(OUT), files(Path(td)))
-                    if not p.is_file() or p.read_bytes() != q.read_bytes()]
+                    if not p.is_file() or norm(p.read_bytes()) != norm(q.read_bytes())]
         print("DIFF: " + ", ".join(diff) if diff else "REPRODUCIBLE")
         return 1 if diff else 0
     write(OUT)
