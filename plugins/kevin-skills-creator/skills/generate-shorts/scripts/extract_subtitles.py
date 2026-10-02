@@ -2,71 +2,30 @@
 """
 YouTube 자체 자막 추출
 - 수동자막 우선, 없으면 자동생성 자막 사용
-- 컨테이너 환경 자동 감지 (--cookies-from-browser 조건부)
+- 권리를 가진 영상(내 채널·허락받은 영상)만. 브라우저 쿠키는 자동으로 쓰지 않는다
+  (YT_COOKIE_FILE·YT_COOKIE_BROWSER를 사용자가 직접 설정한 경우만)
 - 에러 발생 시 output/logs/에 상세 로그 저장
 """
 
 import argparse
 import json
 import os
-import platform
-import random
 import re
 import subprocess
 import sys
-import time
 
 
-# --- 봇 감지 우회 설정 ---
+# --- yt-dlp 설정 ---
 
-USER_AGENTS = {
-    "Darwin": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Linux": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Windows": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-}
-
-MAX_RETRIES = 3
-BASE_DELAY = 2
-MAX_DELAY = 5
+MAX_RETRIES = 2
 
 
-def get_user_agent() -> str:
-    return USER_AGENTS.get(platform.system(), USER_AGENTS["Linux"])
-
-
-def is_container_env() -> bool:
-    """claude.ai 컨테이너 환경 감지"""
-    if os.environ.get("CLAUDE_CONTAINER") == "1":
-        return True
-    if os.path.isdir("/home/claude"):
-        return True
-    if os.path.exists("/.dockerenv"):
-        return True
-    return False
-
-
-def get_cookie_browser() -> str | None:
-    """쿠키 브라우저 결정 (컨테이너면 None)"""
-    if is_container_env():
-        return None
-    return os.environ.get("YT_COOKIE_BROWSER", "chrome")
-
-
-def get_cookie_file() -> str | None:
-    """cookies.txt 파일 탐색"""
-    candidates = ["cookies.txt", "output/cookies.txt", os.path.expanduser("~/cookies.txt")]
-    for c in candidates:
-        if os.path.exists(c):
-            return c
-    return None
-
-
-def get_proxy() -> str | None:
-    return os.environ.get("YT_PROXY")
-
-
-def random_delay():
-    time.sleep(random.uniform(BASE_DELAY, MAX_DELAY))
+def get_cookie_args() -> list:
+    f = os.environ.get("YT_COOKIE_FILE")
+    if f and os.path.isfile(f):
+        return ["--cookies", f]
+    b = os.environ.get("YT_COOKIE_BROWSER")
+    return ["--cookies-from-browser", b] if b else []
 
 
 def log_error(description: str, cmd: list, result) -> str:
@@ -84,26 +43,11 @@ def log_error(description: str, cmd: list, result) -> str:
 
 
 def build_ytdlp_base_args(use_cookies: bool = False) -> list:
-    """yt-dlp 공통 인자. use_cookies=True는 봇 감지 실패 시 재시도용"""
-    args = [
-        "yt-dlp",
-        "--user-agent", get_user_agent(),
-    ]
-
-    # 쿠키: 명시적으로 요청된 경우에만 추가 (키체인 팝업 방지)
-    if use_cookies:
-        cookie_file = get_cookie_file()
-        if cookie_file:
-            args.extend(["--cookies", cookie_file])
-        elif not is_container_env():
-            cookie_browser = get_cookie_browser()
-            if cookie_browser:
-                args.extend(["--cookies-from-browser", cookie_browser])
-
-    proxy = get_proxy()
+    """yt-dlp 공통 인자(python -m yt_dlp). use_cookies는 호환용 인자이며 쿠키는 사용자가 설정한 경우만 쓴다."""
+    args = [sys.executable, "-m", "yt_dlp", *get_cookie_args()]
+    proxy = os.environ.get("YT_PROXY")  # 회사 네트워크 프록시가 필요한 경우
     if proxy:
         args.extend(["--proxy", proxy])
-
     return args
 
 
@@ -136,104 +80,58 @@ def extract_subtitles(url: str, output_dir: str, lang: str = "ko") -> str | None
     return srt_path
 
 
+BLOCKED = ("sign in", "bot", "po token", "confirm you")
+
+
+def _blocked_hint() -> None:
+    print("  YouTube가 로그인 확인을 요구한다. 내 영상이면 YouTube Studio에서 영상·자막을 내려받아 --video·--subs로 진행한다")
+
+
 def _try_download_subs(url: str, output_dir: str, lang: str, auto: bool) -> str | None:
-    """자막 다운로드: 쿠키 없이 먼저 시도 -> 실패 시 쿠키 재시도"""
+    """자막 다운로드(수동 또는 자동). 쿠키는 사용자가 설정한 경우만 쓴다."""
     prefix = "auto_sub" if auto else "manual_sub"
-
-    # 1차: 쿠키 없이 시도 (키체인 팝업 방지)
-    for attempt in range(2):
-        use_cookies = attempt > 0  # 두 번째부터 쿠키 사용
-        if attempt > 0:
-            backoff = BASE_DELAY * 2 + random.uniform(0, 2)
-            print(f"  쿠키 포함 재시도 ({backoff:.0f}초 대기)...")
-            time.sleep(backoff)
-
+    for attempt in range(MAX_RETRIES):
         try:
-            output_template = os.path.join(output_dir, prefix)
-            cmd = build_ytdlp_base_args(use_cookies=use_cookies)
-            if auto:
-                cmd.extend(["--write-auto-sub", "--sub-lang", lang])
-            else:
-                cmd.extend(["--write-sub", "--sub-lang", lang])
-            cmd.extend([
-                "--skip-download",
-                "--convert-subs", "srt",
-                "-o", output_template,
-                url,
-            ])
-
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-
-            # SRT 파일 확인 (returncode와 무관하게 파일 생성됐을 수 있음)
-            srt_path = _find_srt(output_dir, prefix)
+            cmd = build_ytdlp_base_args() + (["--write-auto-sub"] if auto else ["--write-sub"]) + [
+                "--sub-lang", lang, "--skip-download", "--convert-subs", "srt",
+                "-o", os.path.join(output_dir, prefix), url]
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+            srt_path = _find_srt(output_dir, prefix)  # returncode와 무관하게 파일이 생겼을 수 있다
             if srt_path:
                 return srt_path
-
             if result.returncode != 0:
-                log_path = log_error(f"subtitle_{prefix}_attempt{attempt}", cmd, result)
-                stderr = result.stderr.lower()
-                is_bot_blocked = any(kw in stderr for kw in ["sign in", "bot", "po token", "confirm"])
-                if is_bot_blocked and not use_cookies:
-                    print(f"  봇 감지 - 쿠키 재시도 예정")
-                    continue  # 쿠키 포함 재시도
-                elif is_bot_blocked:
-                    print(f"  봇 감지 (쿠키 포함) - cookies.txt 확인 필요")
-
+                log_error(f"subtitle_{prefix}_attempt{attempt}", cmd, result)
+                if any(k in result.stderr.lower() for k in BLOCKED):
+                    _blocked_hint()
+                    return None
         except subprocess.TimeoutExpired:
             print(f"  타임아웃 (시도 {attempt + 1})")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"  오류: {e}")
-
     return None
 
 
 def _try_any_language(url: str, output_dir: str) -> str | None:
     """사용 가능한 아무 자막이나 추출"""
-    for attempt in range(MAX_RETRIES):
-        if attempt > 0:
-            time.sleep(BASE_DELAY * (2 ** attempt))
-
-        try:
-            cmd = build_ytdlp_base_args(use_cookies=attempt > 0) + [
-                "--list-subs", "--skip-download", url,
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-
-            if result.returncode != 0:
-                log_error(f"list_subs_attempt{attempt}", cmd, result)
-                continue
-
-            available_langs = _parse_available_langs(result.stdout)
-            if not available_langs:
-                return None
-
-            target_lang = None
-            for preferred in ["ko", "en"]:
-                if preferred in available_langs:
-                    target_lang = preferred
-                    break
-            if not target_lang:
-                target_lang = available_langs[0]
-
-            print(f"  사용 가능: {', '.join(available_langs[:5])}... -> {target_lang} 선택")
-            random_delay()
-
-            output_template = os.path.join(output_dir, "any_sub")
-            cmd = build_ytdlp_base_args(use_cookies=attempt > 0) + [
-                "--write-auto-sub", "--write-sub",
-                "--sub-lang", target_lang,
-                "--skip-download", "--convert-subs", "srt",
-                "-o", output_template, url,
-            ]
-            subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-
-            srt_path = _find_srt(output_dir, "any_sub")
-            if srt_path:
-                return srt_path
-
-        except Exception as e:
-            print(f"  오류: {e}")
-
+    try:
+        cmd = build_ytdlp_base_args() + ["--list-subs", "--skip-download", url]
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
+        if result.returncode != 0:
+            log_error("list_subs", cmd, result)
+            if any(k in result.stderr.lower() for k in BLOCKED):
+                _blocked_hint()
+            return None
+        langs = _parse_available_langs(result.stdout)
+        if not langs:
+            return None
+        target = next((p for p in ("ko", "en") if p in langs), langs[0])
+        print(f"  사용 가능: {', '.join(langs[:5])}... -> {target} 선택")
+        cmd = build_ytdlp_base_args() + ["--write-auto-sub", "--write-sub", "--sub-lang", target, "--skip-download",
+                                         "--convert-subs", "srt", "-o", os.path.join(output_dir, "any_sub"), url]
+        subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
+        return _find_srt(output_dir, "any_sub")
+    except Exception as e:  # noqa: BLE001
+        print(f"  오류: {e}")
     return None
 
 
@@ -264,10 +162,10 @@ def parse_srt_to_transcript(srt_path: str) -> dict:
     chunks = []
     full_text = []
 
-    with open(srt_path, "r", encoding="utf-8") as f:
-        content = f.read()
+    with open(srt_path, "r", encoding="utf-8-sig") as f:
+        content = f.read().replace("\r\n", "\n")  # Windows에서 만든 CRLF 자막도 블록으로 나뉘게
 
-    blocks = content.strip().split("\n\n")
+    blocks = re.split(r"\n\s*\n", content.strip())
     prev_text = ""
 
     for block in blocks:
@@ -350,19 +248,7 @@ def main():
     print(f"=== YouTube 자막 추출 ===")
     print(f"URL: {args.url}")
     print(f"언어: {args.lang}")
-    print(f"컨테이너: {'예' if is_container_env() else '아니오'}")
-    cookie_browser = get_cookie_browser()
-    if cookie_browser:
-        print(f"쿠키 브라우저: {cookie_browser}")
-    else:
-        cookie_file = get_cookie_file()
-        if cookie_file:
-            print(f"쿠키 파일: {cookie_file}")
-        else:
-            print("쿠키: 없음 (봇 감지 시 cookies.txt 필요)")
-    proxy = get_proxy()
-    if proxy:
-        print(f"프록시: {proxy}")
+    print(f"쿠키: {'사용자 설정 사용' if get_cookie_args() else '사용 안 함'}")
     print()
 
     srt_path = extract_subtitles(args.url, output_dir, args.lang)
@@ -371,8 +257,8 @@ def main():
         print("\nERROR: 자막을 추출할 수 없습니다.")
         print("가능한 원인:")
         print("  - 해당 영상에 자막이 없음")
-        print("  - 봇 감지 차단 -> cookies.txt 배치 또는 브라우저 로그인 후 재시도")
-        print("  - 네트워크 오류 -> YT_PROXY 설정 확인")
+        print("  - YouTube 로그인 확인 요구 -> 내 영상이면 YouTube Studio에서 영상·자막을 받아 로컬 파일로 진행")
+        print("  - 회사 네트워크 -> YT_PROXY 설정 확인")
         print("  - 상세 로그: output/logs/")
         sys.exit(1)
 

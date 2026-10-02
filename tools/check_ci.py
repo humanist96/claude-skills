@@ -61,8 +61,14 @@ REQUIRED_COMMANDS = [
     "python tests/check_research_practice.py",
     "python tests/check_research_calendar.py",
     "python tests/check_plan_verify.py",
-    "python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research",
-    "python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research",
+    "python tests/check_shorts_practice.py",
+    "python tests/check_media.py",
+    "python tests/check_validate_highlights.py",
+    "python tests/check_shorts_e2e.py",
+    "python tests/check_shorts_policy.py",
+    "python tests/check_stt_fallback.py",
+    "python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research generate-shorts",
+    "python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research generate-shorts",
 ]
 
 

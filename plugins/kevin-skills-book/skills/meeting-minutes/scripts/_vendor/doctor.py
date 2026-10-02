@@ -68,17 +68,17 @@ REQUIREMENTS: dict[str, list[tuple]] = {
         ("py", "yaml", True, _pip("pyyaml")),
     ],
     "content-research": [
-        ("py", "feedparser", False, _pip("feedparser")),
-        ("py", "yaml", True, _pip("pyyaml")),
+        ("py", "yaml", True, _pip("pyyaml")),  # 공유 리서치 엔진의 신뢰 등급표(v2는 feedparser를 쓰지 않는다)
     ],
     "content-repurpose": [],
     "generate-shorts": [
-        ("exe", "ffmpeg", True, {"Windows": "winget install Gyan.FFmpeg",
+        ("exe", "ffmpeg", True, {"Windows": "winget install Gyan.FFmpeg  (관리자 권한이 없으면: " + _pip("imageio-ffmpeg") + ")",
                                  "Darwin": "brew install ffmpeg",
                                  "Linux": "sudo apt-get install -y ffmpeg"}),
-        ("exe", "yt-dlp", True, {"Windows": _pip("yt-dlp"), "Darwin": _pip("yt-dlp"), "Linux": _pip("yt-dlp")}),
         ("py", "PIL", True, _pip("Pillow")),
-        ("py", "edge_tts", False, _pip("edge-tts")),
+        ("py", "yt_dlp", False, _pip("yt-dlp")),  # 권리를 가진 YouTube 영상을 URL로 받을 때만
+        ("py", "faster_whisper", False, _pip("faster-whisper")),  # 자막 없는 영상(--stt)
+        ("py", "edge_tts", False, _pip("edge-tts")),  # 카드뉴스 나레이션
         ("font", "korean", True, None),
     ],
     "narration-video": [
@@ -137,6 +137,12 @@ def check_item(kind: str, name: str, required: bool, fix) -> dict:
                 "detail": f"Python 패키지 {name} {'있음' if found else '없음'}", "fix": None if found else _fix(fix)}
     if kind == "exe":
         path = shutil.which(name)
+        if not path and name == "ffmpeg":  # pip install imageio-ffmpeg로 받은 ffmpeg(관리자 권한 불필요)
+            try:
+                import imageio_ffmpeg  # type: ignore
+                path = imageio_ffmpeg.get_ffmpeg_exe()
+            except Exception:  # noqa: BLE001
+                path = None
         return {"id": f"exe:{name}", "status": "ok" if path else bad,
                 "detail": f"{name}: {path or '찾을 수 없음'}", "fix": None if path else _fix(fix)}
     if kind == "font":

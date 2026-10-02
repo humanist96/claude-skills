@@ -8,8 +8,8 @@
 영상 대본을 읽고 작성한다 (SKILL.md 카드뉴스 모드 참조).
 
 사용:
-  python3 card_news.py --cards output/cards.json --output output/cards/
-  python3 card_news.py --cards output/cards.json --output output/cards/ \
+  python card_news.py --cards output/cards.json --output output/cards/
+  python card_news.py --cards output/cards.json --output output/cards/ \
       --video output/cards/cards_short.mp4 --seconds 4 --bgm music.mp3
 """
 
@@ -20,6 +20,11 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
+from fonts import find_font  # noqa: E402
+from media import probe, require_ffmpeg  # noqa: E402
 
 try:
     from PIL import Image, ImageDraw, ImageFont
@@ -42,42 +47,33 @@ LINE = (60, 68, 96)        # 구분선
 
 CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
 
-FONT_CANDIDATES = [
-    "/System/Library/Fonts/AppleSDGothicNeo.ttc",            # macOS
-    "/System/Library/Fonts/Supplemental/AppleGothic.ttf",    # macOS
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux
-    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-    "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
-]
-
 _font_path = None
+_font_is_bold = False
 
 
 def get_font(size: int):
-    global _font_path
+    """한글 폰트(굵은 글꼴 우선, Windows 맑은 고딕 포함 — fonts.py). 없으면 기본 폰트(한글 깨짐)."""
+    global _font_path, _font_is_bold
     if _font_path is None:
-        for p in FONT_CANDIDATES:
-            if os.path.exists(p):
-                _font_path = p
-                break
-        if _font_path is None:
-            # fc-list 폴백
-            try:
-                r = subprocess.run(["fc-list", ":lang=ko", "-f", "%{file}\n"],
-                                   capture_output=True, text=True, timeout=5)
-                if r.stdout.strip():
-                    _font_path = r.stdout.strip().split("\n")[0]
-            except Exception:
-                pass
+        bold = find_font("bold")
+        _font_is_bold = bool(bold)
+        _font_path = bold or find_font() or ""
+        if not _font_path:
+            print("경고: 한글 폰트를 찾지 못했다 — 글자가 깨질 수 있다 (python scripts/_vendor/fonts.py로 확인)")
     if _font_path:
         try:
             return ImageFont.truetype(_font_path, size)
-        except Exception:
+        except OSError:
             pass
     return ImageFont.load_default()
 
 
-# --- 렌더링 헬퍼 ---
+def title_stroke(base: int) -> int:
+    """제목·펀치라인을 두껍게 하는 외곽선 두께. 굵은 글꼴 파일에 외곽선을 더하면
+    획이 많은 한글(를·름·셀)의 획 사이가 메워져 덩어리가 되므로, 굵은 글꼴이면 0, 보통 글꼴이면 base."""
+    get_font(10)
+    return 0 if _font_is_bold else base
+
 
 def draw_gradient(img):
     d = ImageDraw.Draw(img)
@@ -183,7 +179,7 @@ def render_card(card: dict, series_label: str, footer: str, out_path: str):
         f, used, text, trunc = fit_font(d, line, 120, 920)
         if used < 120 or trunc:
             warnings.append(f"card {idx}: 타이틀 '{text[:12]}' 축소({used}px){' + 잘림' if trunc else ''}")
-        d.text((80, y), text, font=f, fill=WHITE, stroke_width=3, stroke_fill=WHITE)
+        d.text((80, y), text, font=f, fill=WHITE, stroke_width=title_stroke(3), stroke_fill=WHITE)
         y += 160
 
     punch = str(card.get("punch", "")).strip()
@@ -191,7 +187,7 @@ def render_card(card: dict, series_label: str, footer: str, out_path: str):
         f, used, text, trunc = fit_font(d, punch, 130, 920)
         if used < 130 or trunc:
             warnings.append(f"card {idx}: 펀치라인 축소({used}px){' + 잘림' if trunc else ''}")
-        d.text((80, y + 30), text, font=f, fill=ACCENT, stroke_width=4, stroke_fill=ACCENT)
+        d.text((80, y + 30), text, font=f, fill=ACCENT, stroke_width=title_stroke(4), stroke_fill=ACCENT)
         y += 30 + 175
     else:
         y += 60
@@ -236,15 +232,7 @@ def render_card(card: dict, series_label: str, footer: str, out_path: str):
 # --- 나레이션 (edge-tts) ---
 
 def get_audio_duration(path: str) -> float:
-    try:
-        r = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
-             "-of", "csv=p=0", path],
-            capture_output=True, text=True, timeout=15
-        )
-        return float(r.stdout.strip())
-    except Exception:
-        return 0.0
+    return probe(path)["duration"]
 
 
 def synth_narration(text: str, voice: str, out_path: str) -> bool:
@@ -357,7 +345,7 @@ def build_video(card_paths: list, out_path: str, seconds: float, fade: float,
     filter_str = "".join(parts).rstrip(";")
 
     cmd = [
-        "ffmpeg", "-y", *inputs, *extra_inputs,
+        require_ffmpeg(), "-y", *inputs, *extra_inputs,
         "-filter_complex", filter_str,
         "-map", "[vout]", "-map", "[aout]",
         "-t", f"{total:.2f}",
@@ -367,7 +355,7 @@ def build_video(card_paths: list, out_path: str, seconds: float, fade: float,
         out_path,
     ]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
     except subprocess.TimeoutExpired:
         print("  영상 조립 타임아웃 (600초 초과)")
         if os.path.exists(out_path):
@@ -382,6 +370,10 @@ def build_video(card_paths: list, out_path: str, seconds: float, fade: float,
 
 
 def main():
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows 콘솔에서 한글이 깨지지 않게
+    except Exception:  # noqa: BLE001
+        pass
     parser = argparse.ArgumentParser(description="카드뉴스 렌더러 (+ 카드 쇼츠 영상)")
     parser.add_argument("--cards", required=True, help="cards.json 경로 (Claude가 작성)")
     parser.add_argument("--output", required=True, help="PNG 출력 디렉토리")

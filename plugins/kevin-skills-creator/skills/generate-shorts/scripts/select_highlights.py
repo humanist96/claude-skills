@@ -299,6 +299,10 @@ def select_candidates(windows: list, count: int = 25, lang: str = "ko") -> list:
 
 
 def main():
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows 콘솔에서 한글이 깨지지 않게
+    except Exception:  # noqa: BLE001
+        pass
     parser = argparse.ArgumentParser(description="규칙 기반 하이라이트 자동 선별")
     parser.add_argument("--transcript", required=True, help="transcript.json 경로")
     parser.add_argument("--output", required=True, help="highlights.json 출력 경로")

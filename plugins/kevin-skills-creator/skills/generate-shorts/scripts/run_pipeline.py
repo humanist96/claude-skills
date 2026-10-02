@@ -1,253 +1,81 @@
 #!/usr/bin/env python3
-"""
-전체 파이프라인 오케스트레이터
-Phase 0 (환경 설정) -> Phase 1 (자막 추출) -> Phase 2 (하이라이트 선별) ->
-Phase 3 (쇼츠 생성) -> Phase 4 (결과 보고)
+"""한 번에 실행(시험용): 원본 준비 → 후보 선별 → (큐레이션 없이) 하이라이트 → 쇼츠 생성 → 검사.
 
-사용법:
-  python3 scripts/run_pipeline.py --url "https://youtube.com/watch?v=..." --count 10 --lang ko
+규칙 점수만으로 구간을 고르고 제목·자막이 대본 그대로라 품질이 낮다. 실제 결과물은 SKILL.md의 큐레이션 워크플로로 만든다.
+--candidates-only로 후보까지만 만들고 Claude가 highlights.json을 쓰는 방식이 기본이다.
+
+사용법
+  python run_pipeline.py --video 강의.mp4 --subs 강의.srt --output <W> --candidates-only
+  python run_pipeline.py --video 강의.mp4 --stt --output <W> --count 3
+  python run_pipeline.py --url "https://youtu.be/..." --i-have-rights --output <W> --candidates-only
 """
+from __future__ import annotations
 
 import argparse
-import json
 import os
 import subprocess
 import sys
 import time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+PY = sys.executable  # Windows에서 'python3'는 스토어 안내 프로그램일 수 있어 지금 실행 중인 파이썬을 쓴다
 
 
-def run_phase(phase_name: str, cmd: list, timeout: int = 300) -> bool:
-    """단일 Phase 실행 + 에러 처리"""
-    print(f"\n{'='*60}")
-    print(f"  {phase_name}")
-    print(f"{'='*60}")
-    print(f"  CMD: {' '.join(cmd)}")
-    print()
-
-    start_time = time.time()
+def run(name: str, args: list[str], timeout: int = 1800) -> bool:
+    print(f"\n=== {name} ===")
+    t0 = time.time()
     try:
-        result = subprocess.run(cmd, timeout=timeout)
-        elapsed = time.time() - start_time
-
-        if result.returncode == 0:
-            print(f"\n  [{phase_name}] 완료 ({elapsed:.0f}초)")
-            return True
-        else:
-            print(f"\n  [{phase_name}] 실패 (exit code: {result.returncode}, {elapsed:.0f}초)")
-            return False
-
+        r = subprocess.run([PY, *args], timeout=timeout)
     except subprocess.TimeoutExpired:
-        elapsed = time.time() - start_time
-        print(f"\n  [{phase_name}] 타임아웃 ({elapsed:.0f}초)")
+        print(f"[{name}] 타임아웃")
         return False
-    except FileNotFoundError as e:
-        print(f"\n  [{phase_name}] 명령을 찾을 수 없음: {e}")
-        return False
+    print(f"[{name}] {'완료' if r.returncode == 0 else f'실패(exit {r.returncode})'} ({time.time() - t0:.0f}초)")
+    return r.returncode == 0
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="YouTube Shorts 자동 생성 파이프라인",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-예시:
-  python3 scripts/run_pipeline.py --url "https://youtube.com/watch?v=ABC123" --count 10
-  python3 scripts/run_pipeline.py --url "https://youtube.com/watch?v=ABC123" --count 5 --lang en
-  python3 scripts/run_pipeline.py --url "https://youtube.com/watch?v=ABC123" --skip-setup
-        """
-    )
-    parser.add_argument("--url", required=True, help="YouTube URL")
-    parser.add_argument("--count", type=int, default=10, help="생성할 쇼츠 수 (기본: 10)")
-    parser.add_argument("--lang", default="ko", help="자막 언어 (기본: ko)")
-    parser.add_argument("--output", default="output", help="출력 디렉토리 (기본: output)")
-    parser.add_argument("--skip-setup", action="store_true", help="Phase 0 (환경 설정) 건너뛰기")
-    parser.add_argument("--skip-subtitles", action="store_true", help="Phase 1 (자막 추출) 건너뛰기 (이미 추출된 경우)")
-    parser.add_argument("--skip-highlights", action="store_true", help="Phase 2 (하이라이트 선별) 건너뛰기 (이미 선별된 경우)")
-    parser.add_argument(
-        "--layout", default="fit_blur",
-        help="세로 변환 방식: fit_blur(기본, 잘림 없음)|crop(가운데만, 좌우 잘림)|fit(단색 레터박스)"
-    )
-    parser.add_argument(
-        "--candidates-only", action="store_true",
-        help="Phase 2a(후보 생성)까지만 실행 후 종료 — Claude가 후보를 검토해 highlights.json을 작성하는 큐레이션 모드용 (권장)"
-    )
-    args = parser.parse_args()
-
-    output_dir = args.output
-    shorts_dir = os.path.join(output_dir, "shorts")
-    os.makedirs(shorts_dir, exist_ok=True)
-    os.makedirs(os.path.join(output_dir, "logs"), exist_ok=True)
-
-    # 스크립트 디렉토리 기준으로 경로 결정
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    print("=" * 60)
-    print("  YouTube Shorts 자동 생성 파이프라인")
-    print("=" * 60)
-    print(f"  URL:    {args.url}")
-    print(f"  쇼츠:   {args.count}개")
-    print(f"  언어:   {args.lang}")
-    print(f"  레이아웃: {args.layout}")
-    print(f"  출력:   {output_dir}/")
-
-    pipeline_start = time.time()
-    phase_results = {}
-
-    # --- Phase 0: 환경 설정 ---
-    if not args.skip_setup:
-        setup_script = os.path.join(script_dir, "setup.sh")
-        ok = run_phase("Phase 0: 환경 설정", ["bash", setup_script])
-        phase_results["setup"] = ok
-        if not ok:
-            print("\n환경 설정 실패. --skip-setup으로 건너뛸 수 있습니다.")
-            sys.exit(1)
+def main(argv: list[str]) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+    ap = argparse.ArgumentParser(description="쇼츠 파이프라인(시험용 한 번에 실행)")
+    src = ap.add_mutually_exclusive_group(required=True)
+    src.add_argument("--video")
+    src.add_argument("--url")
+    ap.add_argument("--subs")
+    ap.add_argument("--stt", action="store_true")
+    ap.add_argument("--i-have-rights", action="store_true")
+    ap.add_argument("--lang", default="ko")
+    ap.add_argument("--count", type=int, default=3)
+    ap.add_argument("--layout", default="fit_blur")
+    ap.add_argument("--output", default="output")
+    ap.add_argument("--candidates-only", action="store_true", help="후보까지만 만들고 멈춘다(큐레이션 모드, 권장)")
+    a = ap.parse_args(argv)
+    out = Path(a.output)
+    prep = [str(HERE / "prepare_source.py"), "--output", str(out), "--lang", a.lang]
+    if a.video:
+        prep += ["--video", a.video] + (["--subs", a.subs] if a.subs else []) + (["--stt"] if a.stt else [])
     else:
-        print("\n[Phase 0: 환경 설정] 건너뜀 (--skip-setup)")
-        phase_results["setup"] = True
-
-    # --- Phase 1: 자막 추출 ---
-    transcript_json = os.path.join(output_dir, "transcript.json")
-
-    if not args.skip_subtitles:
-        extract_script = os.path.join(script_dir, "extract_subtitles.py")
-        ok = run_phase("Phase 1: 자막 추출", [
-            "python3", extract_script,
-            "--url", args.url,
-            "--output", output_dir,
-            "--lang", args.lang,
-        ], timeout=120)
-        phase_results["subtitles"] = ok
-        if not ok:
-            print("\n자막 추출 실패. 자막이 없는 영상이거나 봇 감지일 수 있습니다.")
-            print("상세 로그: output/logs/")
-            sys.exit(1)
-    else:
-        print("\n[Phase 1: 자막 추출] 건너뜀 (--skip-subtitles)")
-        phase_results["subtitles"] = True
-
-    if not os.path.exists(transcript_json):
-        print(f"\nERROR: {transcript_json}을 찾을 수 없습니다.")
-        sys.exit(1)
-
-    # --- Phase 2: 하이라이트 선별 ---
-    highlights_json = os.path.join(output_dir, "highlights.json")
-
-    # 큐레이션 모드: 후보만 만들고 Claude에게 넘긴다 (품질 핵심 단계)
-    if args.candidates_only:
-        candidates_json = os.path.join(output_dir, "candidates.json")
-        select_script = os.path.join(script_dir, "select_highlights.py")
-        ok = run_phase("Phase 2a: 후보 선별 (Claude 큐레이션용)", [
-            "python3", select_script,
-            "--transcript", transcript_json,
-            "--output", candidates_json,
-            "--mode", "candidates",
-            "--candidates-count", "25",
-            "--lang", args.lang,
-        ], timeout=60)
-        if not ok:
-            print("\n후보 선별 실패.")
-            sys.exit(1)
-        print(f"\n{'='*60}")
-        print("  다음 단계: Phase 2b (Claude가 직접 수행)")
-        print(f"{'='*60}")
-        print(f"  1. {candidates_json} 와")
-        print(f"     {os.path.join(output_dir, 'transcript_timestamped.txt')} 를 읽고")
-        print(f"  2. 최종 {highlights_json} 작성 (SKILL.md Phase 2b 스키마 참조)")
-        print(f"  3. 쇼츠 생성:")
-        print(f"     python3 scripts/generate_shorts.py --highlights {highlights_json} \\")
-        print(f"       --url \"{args.url}\" --output {shorts_dir} --srt {os.path.join(output_dir, 'transcript.srt')} --layout {args.layout}")
-        sys.exit(0)
-
-    if not args.skip_highlights:
-        select_script = os.path.join(script_dir, "select_highlights.py")
-        ok = run_phase("Phase 2: 하이라이트 선별", [
-            "python3", select_script,
-            "--transcript", transcript_json,
-            "--output", highlights_json,
-            "--count", str(args.count),
-            "--lang", args.lang,
-        ], timeout=60)
-        phase_results["highlights"] = ok
-        if not ok:
-            print("\n하이라이트 선별 실패.")
-            sys.exit(1)
-    else:
-        print("\n[Phase 2: 하이라이트 선별] 건너뜀 (--skip-highlights)")
-        phase_results["highlights"] = True
-
-    if not os.path.exists(highlights_json):
-        print(f"\nERROR: {highlights_json}을 찾을 수 없습니다.")
-        sys.exit(1)
-
-    # --- Phase 3: 쇼츠 생성 ---
-    generate_script = os.path.join(script_dir, "generate_shorts.py")
-    srt_path = os.path.join(output_dir, "transcript.srt")
-
-    generate_cmd = [
-        "python3", generate_script,
-        "--highlights", highlights_json,
-        "--url", args.url,
-        "--output", shorts_dir,
-        "--layout", args.layout,
-    ]
-    if os.path.exists(srt_path):
-        generate_cmd.extend(["--srt", srt_path])
-
-    ok = run_phase("Phase 3: 쇼츠 생성", generate_cmd, timeout=1800)
-    phase_results["generate"] = ok
-
-    # --- Phase 4: 결과 보고 ---
-    pipeline_elapsed = time.time() - pipeline_start
-
-    print(f"\n{'='*60}")
-    print(f"  Phase 4: 결과 보고")
-    print(f"{'='*60}")
-
-    metadata_path = os.path.join(shorts_dir, "metadata.json")
-    if os.path.exists(metadata_path):
-        with open(metadata_path, "r", encoding="utf-8") as f:
-            metadata = json.load(f)
-
-        shorts = metadata.get("shorts", metadata) if isinstance(metadata, dict) else metadata
-        if isinstance(shorts, dict):
-            shorts = shorts.get("shorts", [])
-        failures = metadata.get("failures", []) if isinstance(metadata, dict) else []
-
-        total_size = sum(s.get("size_mb", 0) for s in shorts)
-        total_duration = sum(s.get("duration", 0) for s in shorts)
-
-        print(f"\n  생성 성공: {len(shorts)}개")
-        if failures:
-            print(f"  생성 실패: {len(failures)}개")
-        print(f"  총 용량:   {total_size:.1f}MB")
-        print(f"  총 길이:   {total_duration:.0f}초")
-        print(f"  소요 시간: {pipeline_elapsed:.0f}초 ({pipeline_elapsed/60:.1f}분)")
-        print()
-
-        for s in shorts:
-            print(f"  [{s.get('index', '?'):02d}] {s.get('title', '')} - {s.get('duration', 0):.0f}s ({s.get('size_mb', 0):.1f}MB)")
-
-        if failures:
-            print(f"\n  실패 목록:")
-            for f_item in failures:
-                print(f"  [{f_item.get('index', '?'):02d}] {f_item.get('title', '')} - {f_item.get('reason', '')}")
-
-        print(f"\n  메타데이터: {metadata_path}")
-        print(f"  에러 로그:  output/logs/")
-    else:
-        print("\n  메타데이터 파일을 찾을 수 없습니다.")
-        print(f"  쇼츠 생성 {'성공' if phase_results.get('generate') else '실패'}")
-
-    # Phase 요약
-    print(f"\n{'='*60}")
-    print(f"  Phase 요약")
-    print(f"{'='*60}")
-    for phase, ok in phase_results.items():
-        status = "성공" if ok else "실패"
-        print(f"  {phase:15s} : {status}")
-    print(f"  총 소요 시간    : {pipeline_elapsed:.0f}초")
-    print(f"{'='*60}")
+        prep += ["--url", a.url] + (["--i-have-rights"] if a.i_have_rights else [])
+    if not run("1. 원본·대본 준비", prep):
+        return 1
+    if a.candidates_only:
+        ok = run("2. 후보 선별", [str(HERE / "select_highlights.py"), "--transcript", str(out / "transcript.json"),
+                                 "--output", str(out / "candidates.json"), "--mode", "candidates", "--lang", a.lang])
+        if ok:
+            print(f"\n다음: {out / 'candidates.json'}와 {out / 'transcript_timestamped.txt'}를 읽고 {out / 'highlights.json'}을 쓴다(SKILL.md 3단계)")
+        return 0 if ok else 1
+    if not run("2. 하이라이트(규칙 점수만)", [str(HERE / "select_highlights.py"), "--transcript", str(out / "transcript.json"),
+                                          "--output", str(out / "highlights.json"), "--count", str(a.count), "--lang", a.lang]):
+        return 1
+    gen = [str(HERE / "generate_shorts.py"), "--highlights", str(out / "highlights.json"), "--output", str(out / "shorts"),
+           "--srt", str(out / "transcript.srt"), "--layout", a.layout]
+    gen += ["--video", a.video] if a.video else ["--url", a.url]
+    if not run("3. 쇼츠 생성", gen):
+        return 1
+    return 0 if run("4. 검사", [str(HERE / "verify_short.py"), str(out / "shorts"), "--highlights", str(out / "highlights.json")]) else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))

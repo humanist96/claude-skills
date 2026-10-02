@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install pinned doc-automation dependencies (used by Phase 1 checks)
-        run: python -m pip install -r plugins/kevin-skills-book/skills/doc-automation/scripts/requirements.txt -r plugins/kevin-skills-book/skills/data-collector/scripts/requirements.txt -c constraints.txt
+        run: python -m pip install -r plugins/kevin-skills-book/skills/doc-automation/scripts/requirements.txt -r plugins/kevin-skills-book/skills/data-collector/scripts/requirements.txt -r plugins/kevin-skills-creator/skills/generate-shorts/scripts/requirements.txt -c constraints.txt
       - name: Skill conventions (new violations only)
         run: python tools/validate_skills.py --baseline tools/validate-baseline.json
       - name: Validator positive control
@@ -117,10 +117,22 @@ jobs:
         run: python tests/check_research_calendar.py
       - name: "content-research: plan verifier controls"
         run: python tests/check_plan_verify.py
+      - name: "generate-shorts: practice lecture and answer key"
+        run: python tests/check_shorts_practice.py
+      - name: "generate-shorts: shared media helpers"
+        run: python tests/check_media.py
+      - name: "generate-shorts: highlight validator controls"
+        run: python tests/check_validate_highlights.py
+      - name: "generate-shorts: end-to-end render and verify controls"
+        run: python tests/check_shorts_e2e.py
+      - name: "generate-shorts: rights policy"
+        run: python tests/check_shorts_policy.py
+      - name: "generate-shorts: speech-recognition memory fallback"
+        run: python tests/check_stt_fallback.py
       - name: Phase 1 skill quality
-        run: python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research
+        run: python tools/check_skill_quality.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research generate-shorts
       - name: Phase 1 skill-creator eval sets
-        run: python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research
+        run: python tools/check_skillcreator_evals.py doc-automation hwpx-editor excel-automation meeting-minutes content-repurpose data-collector content-research generate-shorts
 
   plugin-validate:
     runs-on: ubuntu-latest

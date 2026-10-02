@@ -1,251 +1,145 @@
 ---
 name: generate-shorts
-description: >
-  롱폼 영상/팟캐스트에서 유튜브 쇼츠(인스타 릴스/틱톡)를 자동 생성합니다.
-  YouTube 자막 추출 → 후보 구간 스코어링 → Claude가 하이라이트 선별·제목/후크 작성·자막 재구성 →
-  세로 영상(1080x1920) 변환 + 후크 오버레이 + 자막 합성 → Claude 프레임 검수.
-  화면 녹화·강의·코드·슬라이드처럼 가로가 넓은 영상도 잘림 없이 변환합니다
-  (콘텐츠에 맞는 레이아웃 선택: fit_blur/crop/fit).
-  카드뉴스 모드도 지원: "카드뉴스", "개념 카드", "카드로 정리" 요청 시
-  영상 내용을 요약한 카드 이미지 세트(+ 카드 쇼츠 영상)를 생성합니다.
-  claude.ai 컨테이너와 로컬 환경 모두 지원합니다.
-  사용: /generate-shorts [유튜브URL]
-argument-hint: "[youtube-url] [shorts-count]"
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
+description: 내가 가진 롱폼 영상(로컬 mp4·mov, 또는 권리를 확인한 내 채널 YouTube 영상)에서 세로 쇼츠·릴스·틱톡 영상 파일(1080x1920 mp4)을 만든다. 자막 파일이나 음성 인식으로 대본을 준비하고, 규칙 점수로 추린 후보에서 Claude가 독립적으로 이해되는 구간을 골라 제목·후크·자막을 다시 쓴 뒤, ffmpeg로 세로 변환·후크·한글 자막을 합성하고, 하이라이트와 완성 영상을 스크립트로 검사한다. 강의·화면 녹화·슬라이드처럼 가로가 넓은 영상도 잘리지 않게 바꾸며, 영상 내용을 요약한 카드뉴스 이미지와 카드 쇼츠도 만든다. "이 강의 영상으로 쇼츠 만들어줘", "내 유튜브 영상 하이라이트 쇼츠로", "릴스용 세로 영상", "영상 내용 카드뉴스로 정리" 같은 요청에 쓴다. 쇼츠 대본만 필요하면 content-repurpose, 원고로 나레이션 영상을 처음부터 만들면 narration-video가 맡는다. 권리를 확인하지 않은 다른 사람의 영상을 내려받아 가공하는 데는 쓰지 않는다.
+argument-hint: "[영상 파일 경로 또는 내 YouTube URL] [쇼츠 개수]"
+metadata:
+  author: humanist96
+  version: 2.0.0-alpha.1
+  book-chapter: "9"
 ---
 
-# YouTube Shorts 자동 생성 스킬
+# 롱폼 영상 → 쇼츠
 
-롱폼 영상 하나에서 쇼츠 여러 개를 만든다. **스크립트는 도구이고, 판단은 Claude가 한다.**
-규칙 스코어러는 감정 키워드 개수를 셀 뿐 내용을 이해하지 못하므로, 후보를 추리는 데까지만 쓴다.
-어떤 구간이 "쇼츠가 되는지", 제목·후크·자막을 어떻게 쓸지는 Claude가 내용을 읽고 결정한다.
-이 큐레이션 단계(Phase 2b)와 검수 단계(Phase 3.5)가 품질을 좌우하므로 건너뛰지 않는다.
+쇼츠가 실패하는 지점은 대개 네 곳이다. 앞뒤 맥락이 없으면 이해가 안 되는 구간을 고르고, 자동자막의 오인식·중복이 화면에 그대로 나오고, 가로 영상을 잘라 글자를 못 읽게 만들고, 권리가 없는 영상을 가공한다.
+그래서 이 스킬은 스크립트로 대본을 준비하고 후보를 추린 뒤, **구간 선택·제목·후크·자막은 Claude가 내용을 읽고 정하고**, 인코딩 전후에 `validate_highlights.py`·`verify_short.py`로 검사하고, 마지막으로 프레임을 눈으로 확인한다.
 
-## 전체 흐름
+## 언제 쓰는가 / 쓰지 않는가
 
-| Phase | 주체 | 내용 |
-|-------|------|------|
-| 0 | 스크립트 | 환경 설정 (ffmpeg, yt-dlp, 한글 폰트) |
-| 1 | 스크립트 | YouTube 자막 추출 → transcript.json/srt/txt |
-| 2a | 스크립트 | 후보 구간 ~25개 스코어링 → candidates.json |
-| **2b** | **Claude** | 후보 검토 → 선별 + 제목/후크 + 자막 재구성 → highlights.json |
-| 3 | 스크립트 | 구간 다운로드 → 세로 변환 + 후크 오버레이 + 자막 합성 |
-| **3.5** | **Claude** | 프레임 추출해 눈으로 검수, 문제 시 수정 후 재실행 |
-| 4 | 스크립트 | 결과 보고 (metadata.json) |
+| 상황 | 이 스킬 | 다른 스킬 |
+|------|:------:|-----------|
+| 내 강의·발표·화면 녹화 파일 → 쇼츠 mp4 | ✅ | |
+| 내 채널 YouTube 영상(권리 확인) → 쇼츠 | ✅ | |
+| 영상 내용을 카드뉴스 이미지·카드 쇼츠로 | ✅ | |
+| 쇼츠·릴스 **대본**만 | | content-repurpose |
+| 원고 → 나레이션 영상 | | narration-video |
+| 권리를 모르는 남의 영상 다운로드·가공 | ❌ | 하지 않는다 |
 
-## 실행 명령 (큐레이션 모드 — 기본)
+## 시작 전에
+
+> 명령의 `${CLAUDE_SKILL_DIR}`는 Claude Code가 이 스킬 폴더 경로로 바꿔 준다. 바뀌지 않은 채 보이면 이 SKILL.md가 있는 폴더 경로를 넣는다.
+
+1. 맞춤을 확인한다(레이아웃·후크·자막 크기 설정, 채널 문구). 있으면 한 줄로 알린다.
+
+   ```bash
+   python ${CLAUDE_SKILL_DIR}/scripts/_vendor/overrides.py --skill generate-shorts --skill-dir ${CLAUDE_SKILL_DIR} --list
+   ```
+
+2. 작업 폴더: `python ${CLAUDE_SKILL_DIR}/scripts/_vendor/paths.py generate-shorts --create` → 이하 `<W>`
+3. ffmpeg 확인: `python ${CLAUDE_SKILL_DIR}/scripts/_vendor/media.py --check`. 없으면 `references/troubleshooting.md`의 설치 명령을 안내하고 멈춘다.
+4. **권리 확인.** 로컬 파일이면 사용자가 준 것으로 본다. YouTube URL이면 "본인 채널이거나 사용 허락을 받은 영상인가요?"를 확인한다. 확인할 수 없거나 아니라고 하면 내려받지 않고, 원본 파일을 달라고 하거나 대본만 필요한지(content-repurpose) 묻는다.
+
+## 워크플로
+
+```
+- [ ] 1. 원본·대본 준비 — prepare_source.py (영상+자막 / 영상+STT / 권리 확인한 URL)
+- [ ] 2. 후보 추리기 — select_highlights.py --mode candidates
+- [ ] 3. 큐레이션 — references/curation.md, highlights.json 작성
+- [ ] 4. 하이라이트 검사 — validate_highlights 통과
+- [ ] 5. 쇼츠 생성 — generate_shorts.py (레이아웃은 references/layouts.md)
+- [ ] 6. 완성 검사 — verify_short 통과 + 프레임 눈 검수
+- [ ] 7. 전달 — 파일·제목·후크·설명 문구, 정리
+```
+
+### 1. 원본·대본 준비
 
 ```bash
-# Phase 0~2a: 환경 설정 + 자막 추출 + 후보 생성
-python3 scripts/run_pipeline.py --url "$URL" --candidates-only
-
-# Phase 2b: Claude가 output/candidates.json → output/highlights.json 작성 (아래 가이드)
-
-# Phase 3: 쇼츠 생성
-python3 scripts/generate_shorts.py \
-  --highlights output/highlights.json --url "$URL" \
-  --output output/shorts/ --srt output/transcript.srt --layout fit_blur
-
-# Phase 3.5: Claude가 프레임 검수 (아래 체크리스트)
+python ${CLAUDE_SKILL_DIR}/scripts/prepare_source.py --video <영상> --subs <자막.srt|.vtt> --output <W>
+python ${CLAUDE_SKILL_DIR}/scripts/prepare_source.py --video <영상> --stt --output <W>          # 자막 없음
+python ${CLAUDE_SKILL_DIR}/scripts/prepare_source.py --url <내 영상 URL> --i-have-rights --output <W>
 ```
 
-### 명령 시간 제한이 있는 환경 (코워크 등) — 반드시 나눠 실행
+`<W>/transcript.json`·`transcript.srt`·`transcript_timestamped.txt`·`source.json`이 생긴다. `--stt`는 faster-whisper가 필요하다(없으면 설치 명령을 안내). 자막 파일이 있으면 그쪽이 빠르고 정확하다.
 
-코워크처럼 **명령 하나당 실행 시간 제한(~45초)**이 있는 환경에서는 위 Phase 3 한 방 실행이
-타임아웃으로 죽는다 (쇼츠 1개 = 다운로드 ~20초 + 인코딩 ~25초, 여러 개면 확실히 초과).
-백그라운드 실행도 명령이 끝나면 정리되므로 소용없다. 대신 **다운로드와 인코딩을 명령 단위로 분리**한다:
+### 2. 후보 추리기
 
 ```bash
-# 3-a) 구간 다운로드만 (개당 ~20초, 전부 output/cache/에 저장)
-python3 scripts/generate_shorts.py --highlights output/highlights.json --url "$URL" \
-  --output output/shorts/ --download-only
-
-# 3-b) 쇼츠 하나씩 인코딩 (캐시 사용 → 개당 ~25초)
-python3 scripts/generate_shorts.py --highlights output/highlights.json --url "$URL" \
-  --output output/shorts/ --srt output/transcript.srt --layout fit_blur --only 1
-# ... --only 2, --only 3 식으로 반복
+python ${CLAUDE_SKILL_DIR}/scripts/select_highlights.py --transcript <W>/transcript.json --output <W>/candidates.json --mode candidates
 ```
 
-- **재실행 안전**: 이미 완성된 쇼츠는 자동으로 건너뛰고, 캐시된 구간은 다시 받지 않는다.
-  중간에 죽어도 같은 명령을 다시 실행하면 이어서 진행된다. 다시 만들려면 `--force`
-- `--only`로 만든 결과는 기존 metadata.json에 병합된다
-- 전부 끝나고 검수까지 통과하면 `output/cache/`를 삭제해 디스크를 정리한다
+### 3. 큐레이션
 
-## Phase 2b: 하이라이트 큐레이션 (Claude가 직접 수행 — 품질의 핵심)
+`references/curation.md`대로 `<W>/candidates.json`과 `<W>/transcript_timestamped.txt`를 읽고 `<W>/highlights.json`을 쓴다. 점수 순이 아니라 내용으로 고른다.
+- 독립적으로 이해되고 결론이 있는 구간만. 인사·구독 요청·잡담·예고 구간은 쓰지 않는다
+- 개수는 요청을 따른다. 요청이 없으면 기준을 만족하는 구간만(억지로 채우지 않는다)
+- 후크·제목에 영상에 없는 숫자나 과장된 주장을 쓰지 않는다
+- 자막(`subtitles`)은 문장 단위로 다시 쓴다(구간 시작 기준 상대 초)
 
-`output/candidates.json`(후보 목록)과 `output/transcript_timestamped.txt`(전체 타임스탬프 대본)를
-읽고 최종 `output/highlights.json`을 작성한다. 요청받은 개수만큼 선별한다 (기본 10개, 시험용이면 2~3개).
-
-**선별 기준** — score(규칙 점수) 순이 아니라 내용을 읽고 아래를 만족하는 구간을 고른다:
-
-1. **독립성**: 앞뒤 맥락 없이 그 구간만 봐도 이해된다
-2. **후크**: 첫 1~2문장이 궁금증을 만든다 (질문, 반전, 강한 주장, 구체적 숫자)
-3. **완결성**: 구간 안에서 작은 결론/페이오프가 나온다
-4. **다양성**: 선택된 쇼츠끼리 주제가 겹치지 않는다
-
-**경계 조정**: 후보의 start/end는 참고값이다. transcript_timestamped.txt에서 해당 구간 전후를 보고
-문장이 시작되는 지점에서 시작해 결론 문장이 끝나는 지점에서 끝나도록 초 단위로 조정한다 (15~60초 권장).
-
-**제목/후크 작성**:
-- 자동자막의 음성인식 오류를 문맥으로 교정한다 (예: "7발1 2입니다" → 실제 발화를 문맥으로 추정)
-- `title`: 내용 요약형, 28자 이내
-- `hook`: 본편 위에 크게 얹히는 문구 — **20자 이내로 짧고 강하게**. 낚시가 아니라 호기심 유발
-
-**자막 재구성(`subtitles`)**: 자동자막의 롤링 파편을 문장 단위로 다시 쓴다. 이걸 생략하면
-원본 자동자막이 그대로 들어가 중복·오인식이 화면에 노출된다 — **생략하지 말 것**.
-- 시간은 **구간 시작 기준 상대 초** (start=0.0이 구간 시작), 마지막 이벤트는 구간 길이를 넘지 않게
-- 한 이벤트는 1~2줄 분량, 2~5초, 실제 말 타이밍과 대략 일치하게 (transcript_timestamped.txt 참조)
-- 음성인식 오류 교정, 간투사("어", "음") 제거
-
-**highlights.json 스키마**:
-
-```json
-[
-  {
-    "index": 1,
-    "start": 1065.1,
-    "end": 1096.5,
-    "title": "스피커 임베딩이 목소리를 결정한다",
-    "hook": "AI가 목소리를 배우는 법",
-    "reason": "화자 임베딩 개념이 독립적으로 설명되고 결론까지 이어짐",
-    "subtitles": [
-      {"start": 0.0, "end": 3.5, "text": "화자 테이블에서 스피커 정보를 가져옵니다"},
-      {"start": 3.5, "end": 7.0, "text": "이걸 인풋 임베딩에 넣어주면"}
-    ]
-  }
-]
-```
-
-## Phase 3.5: 프레임 검수 (Claude가 직접 수행)
-
-생성된 각 쇼츠에서 프레임을 뽑아 Read 도구로 **직접 눈으로** 확인한다:
+### 4. 하이라이트 검사
 
 ```bash
-ffmpeg -y -ss 1  -i output/shorts/short_01.mp4 -frames:v 1 output/check_01_hook.png   # 후크 구간
-ffmpeg -y -ss 10 -i output/shorts/short_01.mp4 -frames:v 1 output/check_01_mid.png    # 본편 중간
+python ${CLAUDE_SKILL_DIR}/scripts/validate_highlights.py <W>/highlights.json --source <W>/source.json --transcript <W>/transcript.json
 ```
 
-체크리스트:
-- [ ] 화면이 좌우/상하로 잘리지 않았다 (코드·슬라이드 글자가 온전히 보임)
-- [ ] 자막이 하단에 적정 크기로 표시되고 화면 밖으로 넘치지 않는다
-- [ ] 후크 텍스트가 읽히고, 핵심 콘텐츠를 가리지 않는다
-- [ ] 검은 화면/빈 프레임이 없다
+`HIGHLIGHTS OK`가 나올 때까지 고친다. 경고(문장 경계 어긋남, 긴 자막 줄)는 가능하면 고친다.
 
-문제 발견 시 원인별로 조치한 뒤 **해당 쇼츠만** 재실행한다:
-- 자막이 길거나 겹침 → highlights.json의 subtitles를 더 짧게 재작성
-- 후크가 콘텐츠를 가림 → hook 문구 단축 또는 config의 hook_duration 축소
-- 화면 잘림 → `--layout fit_blur` 확인 (crop은 토킹헤드 전용)
-
-## 영상 레이아웃 선택 (중요)
-
-원본이 16:9 가로 영상일 때 세로(9:16)로 바꾸는 방식. **원본 콘텐츠를 보고 고른다.**
-
-| layout | 동작 | 언제 쓰나 |
-|--------|------|-----------|
-| `fit_blur` (기본) | 원본 전체를 폭에 맞춰 넣고 위·아래를 블러 배경으로 채움. **아무것도 잘리지 않음** | 화면 녹화, 코드, 슬라이드/강의, 발표, 게임, 표·차트 등 가장자리 정보가 중요한 모든 경우 |
-| `crop` | 가운데를 꽉 채우고 좌우를 잘라냄 | 인물이 화면 **중앙**에 있는 토킹헤드·인터뷰·브이로그 전용 |
-| `fit` | 단색(검정) 레터박스 | 배경을 깔끔하게 두고 싶을 때 |
-
-**확신이 없으면 `fit_blur`.** 강의·코드·화면 녹화를 `crop`으로 처리하면 좌우가 잘려 못 읽게 된다.
-
-**주의 — 원본에 자막이 구워진 영상(방송·예능 클립, 밈 영상 등)**: 인물 중심이라도 `crop`을 쓰면
-화면 전체 폭에 깔린 원본 자막과 B롤이 좌우로 잘린다. 이런 영상은 **fit_blur**를 쓴다.
-또한 원본 자막 위에 스킬 자막이 겹쳐 이중 자막이 되므로, 이 경우 highlights.json의
-`subtitles`를 빈 배열(`[]`)로 두어 스킬 자막을 생략하고 후크만 얹는 것을 권장한다.
-판단이 어려우면 Phase 3 전에 구간 프레임을 한 장 뽑아 원본 자막 유무를 눈으로 확인한다.
-
-## 전자동 모드 (빠르지만 품질 타협)
-
-Claude 큐레이션 없이 규칙 스코어만으로 한 번에 생성한다. 제목·자막이 자동자막 그대로라
-인식 오류와 어색한 구간 선택이 남는다. 데모/시험용으로만 권장.
+### 5. 쇼츠 생성
 
 ```bash
-python3 scripts/run_pipeline.py --url "$URL" --count 10 --lang ko --layout fit_blur
+python ${CLAUDE_SKILL_DIR}/scripts/generate_shorts.py --highlights <W>/highlights.json --video <영상> --output <W>/shorts --srt <W>/transcript.srt --layout fit_blur
 ```
 
-## 카드뉴스 모드 (이미지 세트 + 카드 쇼츠 영상)
+URL 원본이면 `--video` 대신 `--url`(하이라이트 구간만 받는다). 레이아웃은 원본을 보고 고른다: 강의·코드·슬라이드는 `fit_blur`, 가운데 인물 토킹헤드만 `crop`. 명령에 시간 제한이 있는 환경은 `references/troubleshooting.md`의 나눠 실행하기.
 
-"카드뉴스", "개념 카드", "카드로 정리" 같은 요청이면 클립 대신 **내용 요약 카드**를 만든다.
-디자인 시스템(다크 네이비 + 옐로 액센트, 1080x1920)은 `scripts/card_news.py`에 고정되어 있고,
-Claude는 **내용(cards.json)만** 작성한다. 외부 API 불필요 (Pillow + ffmpeg).
-
-**절차**:
+### 6. 완성 검사
 
 ```bash
-# 1) 자막 추출 (이미 있으면 생략)
-python3 scripts/run_pipeline.py --url "$URL" --candidates-only --skip-setup
-
-# 2) [Claude] transcript를 읽고 output/cards.json 작성 (아래 스키마)
-
-# 3) 카드 렌더링 (+ 옵션: 카드 쇼츠 영상)
-python3 scripts/card_news.py --cards output/cards.json --output output/cards/ \
-  --video output/cards/cards_short.mp4 --seconds 4
-
-# 3-1) 나레이션 포함 버전 (권장): AI 성우가 각 카드의 narration을 읽어주고,
-#      카드 길이가 나레이션 길이에 자동으로 맞춰진다.
-#      필요: pip install edge-tts --break-system-packages (무료, 인터넷 필수)
-python3 scripts/card_news.py --cards output/cards.json --output output/cards/ \
-  --video output/cards/cards_short.mp4 --tts
-
-# 4) [Claude] 생성된 PNG를 Read로 열어 검수 (텍스트 넘침/겹침/오탈자)
+python ${CLAUDE_SKILL_DIR}/scripts/verify_short.py <W>/shorts --highlights <W>/highlights.json
 ```
 
-**cards.json 스키마와 작성 규칙**:
-
-```json
-{
-  "series_label": "Qwen-TTS 파인튜닝 · 핵심 개념",
-  "footer": "전체 강의는 채널에서 ▶",
-  "cards": [
-    {
-      "index": 1,
-      "title_lines": ["로스는", "낮을수록 좋다?"],
-      "punch": "오해입니다",
-      "points": [
-        {"label": "실전 기준", "body": "여러 번 학습 결과, 로스 12~11 구간이\n가장 안정적인 품질"},
-        {"label": "예외 사례", "body": "7까지 내려가도 문제없던 경우 있음"},
-        {"label": "진짜 변수", "body": "로스보다 에폭 수가 중요"}
-      ],
-      "narration": "로스는 낮을수록 좋다고 생각하기 쉬운데요, 사실은 오해입니다. 실제로 여러 번 학습해 보면 로스 12에서 11 구간이 가장 안정적이었고, 로스 숫자보다는 에폭 수가 훨씬 중요합니다."
-    }
-  ]
-}
-```
-
-- 카드 1장 = 개념 1개. 보통 3~5장 세트
-- `title_lines`: 질문/도발형 문구, **최대 2줄, 줄당 8자 내외** (길면 자동 축소되지만 짧게 쓰는 게 예쁘다)
-- `punch`: 반전/답변 한 마디, **8자 이내** (예: "오해입니다", "비밀은 이것")
-- `points`: 2~3개. `label` 6자 이내, `body` 2줄 이내(줄당 ~22자, 넘치면 자동 줄바꿈·말줄임)
-- `narration`: `--tts` 사용 시 AI 성우가 읽는 문장. **구어체 2~3문장(10~20초 분량)**으로
-  카드 내용을 자연스럽게 풀어 쓴다. 카드 표시 시간이 이 길이에 자동으로 맞춰진다.
-  생략하면 제목+펀치를 그대로 읽는다 (어색하므로 꼭 작성 권장)
-- 영상 대본의 음성인식 오류는 문맥으로 교정해서 쓴다
-- 렌더러가 출력한 "경고"(폰트 축소/잘림)가 있으면 해당 카드 문구를 줄여 다시 렌더링한다
-
-## 핵심 제약사항
-
-- **디스크 절약 최우선**: torch, openai-whisper 등 대용량 패키지 설치 금지
-- **의존성**: ffmpeg + yt-dlp만 사용 (외부 API 없음)
-- **자막**: YouTube 자체 제공 자막 (수동 우선, 없으면 자동생성)
-- **봇 감지 우회**: 컨테이너 환경 자동 감지, 쿠키/UA/딜레이 조건부 적용
-- **한글 지원**: 폰트 자동 탐색 + 설치, 자막/후크 한글 렌더링
-
-## 환경변수 (모두 선택사항)
-
-- `YT_COOKIE_BROWSER`: 쿠키 브라우저 (기본: chrome, 컨테이너에서는 자동 비활성)
-- `YT_PROXY`: 프록시 URL (예: socks5://127.0.0.1:1080)
-- `CLAUDE_CONTAINER`: 컨테이너 환경 강제 (1로 설정)
-
-## 개별 Phase 건너뛰기
-
-이미 실행한 Phase가 있으면 건너뛸 수 있다:
+`SHORTS VERIFY OK`(해상도·길이·오디오·검은 화면)를 확인한 뒤, 쇼츠마다 후크 구간(1초)과 중간 프레임을 뽑아 Read로 눈으로 본다.
 
 ```bash
-python3 scripts/run_pipeline.py --url "$URL" --candidates-only --skip-setup                  # 환경 설정 생략
-python3 scripts/run_pipeline.py --url "$URL" --candidates-only --skip-setup --skip-subtitles # 자막도 이미 있음
+ffmpeg -y -ss 1 -i <W>/shorts/short_01.mp4 -frames:v 1 <W>/check_01_hook.png
 ```
+
+(ffmpeg가 PATH에 없으면 `media.py --check`가 보여 준 경로로 실행한다.) 확인할 것: 글자가 잘리지 않음, 자막이 화면 안에 적당한 크기, 후크가 내용을 가리지 않음, 한글이 네모로 나오지 않음.
+문제가 있으면 원인을 고치고 그 쇼츠만 `--only N --force`로 다시 만든다.
+
+### 7. 전달
+
+1. 쇼츠 파일 목록: 번호·제목·후크·길이·원본 구간
+2. 업로드용 설명·해시태그(`<W>/shorts/metadata.json`)
+3. 고르지 않은 구간과 이유(예: "인사·잡담 구간은 제외")
+4. 가정한 것(레이아웃, 개수)과 검사 결과 한 줄
+5. 검수가 끝나면 `<W>/cache/`를 지워도 된다고 알린다
+
+결과물과 응답에 스킬 소개·홍보 문구를 넣지 않는다.
+
+## 카드뉴스 모드
+
+"카드뉴스", "개념 카드", "카드로 정리" 요청이면 `references/card-news.md`대로 `cards.json`을 쓰고 `scripts/card_news.py`로 이미지 세트와 카드 쇼츠를 만든다(1단계 대본은 같다).
+
+## 건너뛰기 쉬운 단계 (합리화 표)
+
+| 이런 생각이 들면 | 실제로는 | 그래서 |
+|------------------|----------|--------|
+| "점수 높은 후보를 그대로 쓰면 된다" | 점수는 감정 단어 수일 뿐이다 | 내용을 읽고 고른다 |
+| "자동자막을 그대로 쓰자" | 오인식·중복이 화면에 그대로 나온다 | subtitles를 다시 쓴다 |
+| "crop이 꽉 차 보인다" | 강의·코드는 좌우가 잘려 못 읽는다 | 확신 없으면 fit_blur |
+| "인코딩이 끝났으니 됐다" | 검은 화면·무음·네모 글자가 생길 수 있다 | verify_short + 프레임 눈 검수 |
+| "링크만 주면 받으면 된다" | 남의 영상은 약관·저작권 문제다 | 권리 확인, 아니면 파일을 요청 |
+| "로그인 확인에 막혔으니 쿠키로 돌파" | 우회는 하지 않는다 | YouTube Studio에서 원본을 받아 로컬로 |
+
+## 맞춤(오버라이드)
+
+영상·자막·후크 설정(`templates/config_template.yaml`을 복사한 `config.yaml`을 `--config`로), 채널 문구·해시태그(`references/channel.md`)를 바꿀 수 있다.
+목록은 README의 "커스터마이즈 포인트", 규약은 `references/_shared/overrides.md`.
 
 ## 참고
 
-- 상세 레퍼런스: [reference.md](reference.md)
-- 설정 템플릿: [templates/config_template.yaml](templates/config_template.yaml)
+- `references/curation.md` — 구간 고르기·제목·후크·자막 재구성·스키마(3단계)
+- `references/layouts.md` — 세로 레이아웃 선택, 원본 자막이 구워진 영상, 후크 오버레이(5단계)
+- `references/card-news.md` — 카드뉴스 모드
+- `references/troubleshooting.md` — ffmpeg·폰트 설치, 시간 제한 환경, YouTube 오류
+- `scripts/_vendor/media.py` — ffmpeg 찾기·영상 정보(공용)
+- 환경 규약: `references/_shared/environment.md`

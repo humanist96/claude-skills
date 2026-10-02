@@ -2,7 +2,16 @@
 
 이 문서는 플러그인 사용자에게 영향을 주는 변경을 기록한다. 버전은 semver를 따른다(스킬 동작 변경은 minor, 이름·입출력 변경은 major).
 
-## 2.0.0-alpha.1 — Phase 1: doc-automation·excel-automation·meeting-minutes·content-repurpose·data-collector·content-research 고도화, hwpx-editor 분리 (v2 브랜치, 미배포)
+## 2.0.0-alpha.1 — Phase 1: doc-automation·excel-automation·meeting-minutes·content-repurpose·data-collector·content-research·generate-shorts 고도화, hwpx-editor 분리 (v2 브랜치, 미배포)
+
+### generate-shorts (재설계)
+- 입력: 로컬 영상 + 자막(권장), 로컬 영상 + 음성 인식(faster-whisper 선택), 권리를 확인한 YouTube URL(`--i-have-rights`). 세 입력 모두 `prepare_source.py`가 같은 대본 파일로 만든다
+- 정책(D8): 브라우저 쿠키 자동 사용, User-Agent 위장, 무작위 지연, '봇 감지 우회' 안내를 삭제했다. 쿠키는 사용자가 환경변수로 설정할 때만 쓴다. 권리 확인 없는 URL은 받지 않는다
+- Windows: 공유 `media.py`(ffmpeg를 PATH·환경변수·imageio-ffmpeg 순으로 찾고 ffprobe 없이 정보 읽기, 필터 경로 이스케이프), 맑은 고딕, `python3` 대신 현재 파이썬, CRLF 자막
+- 검증: `validate_highlights.py`(길이·범위·겹침·자막 시간·제목/후크 길이·문장 경계), `verify_short.py`(해상도·길이·오디오·검은 화면·오버레이 실패)
+- 평가에서 찾아 고친 것: 자막·후크 합성 실패를 성공으로 숨기던 동작, Windows 두 줄 후크의 빈 줄, 카드 제목 한글 획 뭉개짐, 제목 전체를 붙인 해시태그, 메모리 부족 시 음성 인식 중단(작은 모델로 다시 시도)
+- 삭제: `setup.sh`(brew·apt 전용), `reference.md`(references 4개로 나눔), 제3자 방송 자막 결과물
+- 평가: v1.6.1 대비 기대 항목 통과율 0.95 → 1.00(4개 eval). v1.6.1은 쇼츠·카드를 만든 3번 모두 에이전트가 어댑터 코드를 직접 짰다. 상세 `docs/03-analysis/generate-shorts-phase1.analysis.md`
 
 ### content-research (재설계, data-collector와 엔진 통합)
 - 역할: 콘텐츠 기획 전용(유튜브·블로그·뉴스레터·SNS 주제, 발행 캘린더). 시장 리서치 보고서는 data-collector
@@ -54,6 +63,7 @@
 - 평가: v1.6.1 대비 기대 항목 통과율 0.93 → 1.00(3개 eval), 실행 시간 245초 → 148초. 상세 `docs/03-analysis/excel-automation-phase1.analysis.md`
 
 ### 실습 샘플
+- 9장 쇼츠 실습: 제3자 방송 영상의 자동자막 결과물 대신 자체 제작 강의 영상(`shorts-lecture`, 106초, 자막 포함)과 정답표(`shorts-answer-key`)를 넣었다. 정보 구간 3개와 인사·잡담·마무리 구간 3개를 일부러 섞었다.
 - 7장 콘텐츠 리서치 실습: 가상 테크 뉴스 RSS 12건(`research-feed`)과 정답표(`research-answer-key`)를 추가했다. 중복·기간 밖 기사, 루머, 지시문, 할인 코드, 3개월 캘린더 정답을 넣었다.
 - 6장 리서치 실습: 가상 기사 13건(`collector-articles`)과 정답표(`collector-answer-key`)를 추가했다. 중복·기간 밖·날짜 없는 기사, 상충 수치, 지시문, IR을 일부러 넣었다.
 - 8장 리퍼포징 실습: 제3자 유튜브 녹취 대신 자체 작성 원본 대본(`repurpose-source`)과 정답표(`repurpose-answer-key`, 책 8-1·8-2 집계 정답 포함)를 추가했다.

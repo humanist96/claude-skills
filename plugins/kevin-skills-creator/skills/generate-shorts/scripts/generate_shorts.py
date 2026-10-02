@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
 쇼츠 영상 자동 편집
-- 하이라이트 구간만 개별 다운로드 (전체 영상 다운로드 X)
-- 컨테이너 환경 자동 감지 (쿠키 조건부)
-- 한글 폰트 자동 탐색 + fontfile 명시
-- 파일명 불일치 glob 처리
-- concat filter 사용 (코덱 불일치 방지)
+- 입력: 로컬 영상(--video, 권장) 또는 권리를 확인한 YouTube URL(--url, 하이라이트 구간만 받음)
+- ffmpeg는 scripts/_vendor/media.py가 찾는다(PATH·FFMPEG_BINARY·imageio-ffmpeg). ffprobe 없어도 된다
+- 한글 폰트는 scripts/_vendor/fonts.py가 찾는다(Windows 맑은 고딕 포함)
+- 브라우저 쿠키는 자동으로 쓰지 않는다(YT_COOKIE_FILE·YT_COOKIE_BROWSER를 직접 설정한 경우만)
 - 에러 발생 시 output/logs/에 상세 로그
 """
 
@@ -13,80 +12,37 @@ import argparse
 import glob
 import json
 import os
-import platform
-import random
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
-import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
+from media import filter_path, probe, require_ffmpeg  # noqa: E402
+from fonts import family_for, find_font  # noqa: E402
 
 
-# --- 봇 감지 우회 ---
+# --- YouTube(권리를 가진 영상만) ---
 
-USER_AGENTS = {
-    "Darwin": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Linux": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Windows": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-}
-
-MAX_RETRIES = 3
-BASE_DELAY = 2
-MAX_DELAY = 5
+MAX_RETRIES = 2
 
 
-def get_user_agent() -> str:
-    return USER_AGENTS.get(platform.system(), USER_AGENTS["Linux"])
+def get_cookie_args() -> list:
+    """브라우저 쿠키는 자동으로 쓰지 않는다. 사용자가 직접 설정한 경우만:
+    YT_COOKIE_FILE=쿠키 파일 경로, 또는 YT_COOKIE_BROWSER=브라우저 이름."""
+    f = os.environ.get("YT_COOKIE_FILE")
+    if f and os.path.isfile(f):
+        return ["--cookies", f]
+    b = os.environ.get("YT_COOKIE_BROWSER")
+    return ["--cookies-from-browser", b] if b else []
 
 
-def is_container_env() -> bool:
-    if os.environ.get("CLAUDE_CONTAINER") == "1":
-        return True
-    if os.path.isdir("/home/claude"):
-        return True
-    if os.path.exists("/.dockerenv"):
-        return True
-    return False
-
-
-def get_cookie_browser() -> str | None:
-    if is_container_env():
-        return None
-    return os.environ.get("YT_COOKIE_BROWSER", "chrome")
-
-
-def get_cookie_file() -> str | None:
-    for c in ["cookies.txt", "output/cookies.txt", os.path.expanduser("~/cookies.txt")]:
-        if os.path.exists(c):
-            return c
-    return None
-
-
-def get_proxy() -> str | None:
-    return os.environ.get("YT_PROXY")
-
-
-def random_delay():
-    time.sleep(random.uniform(BASE_DELAY, MAX_DELAY))
-
-
-def build_ytdlp_base_args(use_cookies: bool = False) -> list:
-    """yt-dlp 공통 인자. use_cookies=True는 봇 감지 실패 시 재시도용"""
-    args = [
-        "yt-dlp",
-        "--user-agent", get_user_agent(),
-    ]
-    # 쿠키: 명시적으로 요청된 경우에만 (키체인 팝업 방지)
-    if use_cookies:
-        cookie_file = get_cookie_file()
-        if cookie_file:
-            args.extend(["--cookies", cookie_file])
-        elif not is_container_env():
-            cookie_browser = get_cookie_browser()
-            if cookie_browser:
-                args.extend(["--cookies-from-browser", cookie_browser])
-    proxy = get_proxy()
+def build_ytdlp_base_args() -> list:
+    """yt-dlp 공통 인자(python -m yt_dlp — 실행 파일이 PATH에 없어도 된다)."""
+    args = [sys.executable, "-m", "yt_dlp", *get_cookie_args()]
+    proxy = os.environ.get("YT_PROXY")  # 회사 네트워크 프록시가 필요한 경우
     if proxy:
         args.extend(["--proxy", proxy])
     return args
@@ -95,41 +51,13 @@ def build_ytdlp_base_args(use_cookies: bool = False) -> list:
 # --- 한글 폰트 ---
 
 def get_font_path() -> str | None:
-    """한글 지원 폰트 경로 탐색"""
-    candidates = [
-        # Linux (Noto Sans CJK)
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-        # Linux (Nanum)
-        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
-        "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf",
-        # macOS
-        "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-        "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
-    ]
-    for f in candidates:
-        if os.path.exists(f):
-            return f
-    # fc-list로 탐색 시도
-    try:
-        result = subprocess.run(
-            ["fc-list", ":lang=ko", "-f", "%{file}\n"],
-            capture_output=True, text=True, timeout=5
-        )
-        if result.stdout.strip():
-            return result.stdout.strip().split("\n")[0]
-    except Exception:
-        pass
-    return None
+    """한글 지원 폰트 경로(굵은 글꼴 우선). Windows·macOS·Linux 공통 탐색은 fonts.py."""
+    return find_font("bold") or find_font()
 
 
 def _filter_path(p: str) -> str:
-    """ffmpeg 필터 옵션 값(작은따옴표로 감싼 경로)용 이스케이프.
-    콜론은 백슬래시로 이스케이프하고, 작은따옴표는 따옴표를 닫고 \\'를 넣은 뒤
-    다시 여는 방식('\\'')을 쓴다 — 따옴표 안에서는 백슬래시 이스케이프가 동작하지 않기 때문."""
-    p = p.replace("\\", "/").replace(":", "\\:")
-    return p.replace("'", "'\\''")
+    """ffmpeg 필터 옵션 값(작은따옴표 안)용 경로 이스케이프(Windows 'C:\\…' 포함). media.filter_path."""
+    return filter_path(p)
 
 
 # --- 에러 로깅 ---
@@ -149,8 +77,10 @@ def log_error(description: str, cmd: list, result) -> str:
 
 def run_cmd(cmd: list, description: str = "", timeout: int = 120):
     """통합 명령 실행 + 에러 로깅"""
+    if cmd and cmd[0] == "ffmpeg":
+        cmd = [require_ffmpeg(), *cmd[1:]]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
         if result.returncode != 0:
             log_path = log_error(description, cmd, result)
             print(f"    {description} 실패 - 로그: {log_path}")
@@ -163,66 +93,42 @@ def run_cmd(cmd: list, description: str = "", timeout: int = 120):
 # --- 영상 정보 ---
 
 def get_video_info(video_path: str) -> dict:
-    """영상의 해상도, fps 정보 추출"""
-    cmd = [
-        "ffprobe", "-v", "quiet", "-print_format", "json",
-        "-show_streams", video_path
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    try:
-        info = json.loads(result.stdout)
-        for stream in info.get("streams", []):
-            if stream.get("codec_type") == "video":
-                fps_str = stream.get("r_frame_rate", "30/1")
-                parts = fps_str.split("/")
-                fps = int(parts[0]) / int(parts[1]) if len(parts) == 2 and int(parts[1]) != 0 else 30
-                return {
-                    "width": int(stream.get("width", 1080)),
-                    "height": int(stream.get("height", 1920)),
-                    "fps": round(fps, 2),
-                }
-    except (json.JSONDecodeError, ValueError, KeyError):
-        pass
-    return {"width": 1080, "height": 1920, "fps": 30}
+    """영상의 해상도, fps 정보 추출(ffprobe가 없으면 ffmpeg -i로)."""
+    info = probe(video_path)
+    return {"width": info["width"] or 1080, "height": info["height"] or 1920, "fps": info["fps"] or 30}
 
 
 def has_audio_stream(video_path: str) -> bool:
     """영상에 오디오 스트림이 있는지 확인 (concat 조립 전 필수 체크)"""
-    result = subprocess.run(
-        ["ffprobe", "-v", "quiet", "-select_streams", "a",
-         "-show_entries", "stream=codec_type", "-of", "csv=p=0", video_path],
-        capture_output=True, text=True
-    )
-    return bool(result.stdout.strip())
+    return probe(video_path)["has_audio"]
 
 
 def get_duration(video_path: str) -> float:
-    try:
-        result = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
-             "-of", "csv=p=0", video_path],
-            capture_output=True, text=True
-        )
-        return float(result.stdout.strip())
-    except (ValueError, OSError):
-        # ffprobe 부재(FileNotFoundError 포함)나 출력 이상도 0으로 처리해 전체 실행을 살린다
-        return 0.0
+    return probe(video_path)["duration"]
 
 
 # --- 다운로드 ---
 
+def cut_local_section(video: str, start: float, end: float, output_path: str) -> bool:
+    """로컬 영상에서 구간을 잘라 낸다(정확한 경계를 위해 다시 인코딩)."""
+    cmd = ["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", video, "-t", f"{end - start:.3f}",
+           "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-c:a", "aac", "-b:a", "160k", output_path]
+    result = run_cmd(cmd, f"cut_s{start:.0f}_e{end:.0f}", timeout=300)
+    if result is not None and result.returncode == 0 and get_duration(output_path) > 0:
+        return True
+    if os.path.exists(output_path):
+        os.remove(output_path)
+    return False
+
+
 def download_section(url: str, start: float, end: float, output_path: str) -> bool:
-    """구간 다운로드: 쿠키 없이 먼저 -> 실패 시 쿠키 재시도 + 파일명 glob"""
+    """YouTube 구간 다운로드(권리를 가진 영상만). 실패하면 로컬 파일로 진행하도록 안내한다."""
     section_spec = f"*{start}-{end}"
-
     for attempt in range(MAX_RETRIES):
-        use_cookies = attempt > 0  # 첫 시도는 쿠키 없이
         if attempt > 0:
-            backoff = BASE_DELAY * (2 ** attempt) + random.uniform(0, 2)
-            print(f"    재시도 {attempt + 1}/{MAX_RETRIES} ({'쿠키 포함, ' if use_cookies else ''}{backoff:.0f}초 대기)...")
-            time.sleep(backoff)
-
-        cmd = build_ytdlp_base_args(use_cookies=use_cookies) + [
+            print(f"    재시도 {attempt + 1}/{MAX_RETRIES}...")
+            time.sleep(3)
+        cmd = build_ytdlp_base_args() + [
             "--download-sections", section_spec,
             "-f", "bestvideo[height<=1080]+bestaudio/best",
             "--merge-output-format", "mp4",
@@ -230,37 +136,40 @@ def download_section(url: str, start: float, end: float, output_path: str) -> bo
             "--force-keyframes-at-cuts",
             url
         ]
-
         result = run_cmd(cmd, f"download_s{start:.0f}_e{end:.0f}", timeout=180)
         if result is None:
             continue
-
-        # 파일 존재 확인 (정확한 경로) + 유효성 검증
-        # (손상/부분 파일이 영구 캐시로 승격되면 이후 모든 인코딩이 반복 실패한다)
+        # 손상/부분 파일이 영구 캐시로 승격되면 이후 모든 인코딩이 반복 실패한다
         if os.path.exists(output_path):
             if get_duration(output_path) > 0:
-                random_delay()
                 return True
             os.remove(output_path)
-
-        # yt-dlp가 다른 이름으로 저장했을 수 있음 (문제 6)
-        # 단 .part/.ytdl 같은 미완성 임시 파일은 절대 승격하지 않는다
+        # yt-dlp가 다른 이름으로 저장했을 수 있음. .part/.ytdl 같은 미완성 임시 파일은 승격하지 않는다
         base = os.path.splitext(output_path)[0]
-        candidates = [c for c in glob.glob(f"{base}*")
-                      if not c.endswith((".part", ".ytdl", ".temp"))]
+        candidates = [c for c in glob.glob(f"{base}*") if not c.endswith((".part", ".ytdl", ".temp"))]
         if candidates:
             os.rename(candidates[0], output_path)
             if get_duration(output_path) > 0:
-                random_delay()
                 return True
             os.remove(output_path)
-
         if result.returncode != 0:
-            stderr_lower = result.stderr.lower()
-            if "sign in" in stderr_lower or "bot" in stderr_lower:
-                print(f"    봇 감지 - 쿠키 확인 필요")
-
+            err = result.stderr.lower()
+            if "sign in" in err or "bot" in err:
+                print("    YouTube가 로그인 확인을 요구한다. 내 영상이면 YouTube Studio에서 원본을 내려받아 --video로 진행한다")
+                return False
     return False
+
+
+def acquire_section(source: dict, start: float, end: float, output_path: str) -> bool:
+    if source.get("video"):
+        return cut_local_section(source["video"], start, end, output_path)
+    return download_section(source["url"], start, end, output_path)
+
+
+def source_key(source: dict) -> str:
+    if source.get("video"):
+        return re.sub(r"[^A-Za-z0-9_-]", "", Path(source["video"]).stem)[:16] or "local"
+    return _video_id(source["url"])
 
 
 def _video_id(url: str) -> str:
@@ -410,6 +319,13 @@ def write_ass_from_srt(
 
 # --- 텍스트 오버레이 (인트로/아웃트로) ---
 
+def write_drawtext_file(path: str, text: str) -> None:
+    """drawtext textfile을 LF 줄바꿈으로 쓴다. Windows 텍스트 모드(CRLF)로 쓰면 drawtext가 CR도
+    줄바꿈으로 읽어 줄 사이에 빈 줄이 생긴다(두 줄 후크의 간격이 세 배)."""
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+
+
 def wrap_text(text: str, max_chars: int = 11, max_lines: int = 4) -> str:
     """인트로/아웃트로 카드 텍스트를 줄바꿈한다.
     drawtext는 자동 줄바꿈이 없어, 긴 문장을 그대로 넣으면 한 줄로 화면 밖까지 넘친다.
@@ -447,8 +363,7 @@ def create_text_overlay(
     fontfile_opt = f":fontfile='{_filter_path(font_path)}'" if font_path else ""
 
     txt_file = output_path + ".txt"
-    with open(txt_file, "w", encoding="utf-8") as f:
-        f.write(wrap_text(text))
+    write_drawtext_file(txt_file, wrap_text(text))
 
     cmd = [
         "ffmpeg", "-y",
@@ -545,15 +460,31 @@ def build_layout_filtergraph(
 
 
 def make_hashtag(text: str) -> str:
-    """제목에서 안전한 해시태그를 만든다 (특수문자/공백 제거)."""
+    """안전한 해시태그 하나(특수문자·공백 제거, 20자 이내)."""
     tag = re.sub(r"[^0-9A-Za-z가-힣]", "", text or "")[:20]
     return f"#{tag}" if tag else ""
+
+
+def make_hashtags(highlight: dict, title: str) -> list[str]:
+    """#shorts #쇼츠 + 주제 태그. highlights.json의 hashtags(Claude가 고른 단어)를 우선 쓰고,
+    없으면 제목의 첫 단어 하나만 쓴다(제목 전체를 붙인 긴 태그는 검색에 쓸모가 없다)."""
+    picked = highlight.get("hashtags")
+    if isinstance(picked, list) and picked:
+        topic = [make_hashtag(str(x)) for x in picked]
+    else:
+        words = [w for w in re.split(r"\s+", re.sub(r"[^0-9A-Za-z가-힣\s]", " ", title or "")) if len(w) >= 2]
+        topic = [make_hashtag(words[0])] if words else []
+    out = ["#shorts", "#쇼츠"]
+    for tag in topic:
+        if tag and tag not in out:
+            out.append(tag)
+    return out
 
 
 # --- 쇼츠 처리 ---
 
 def process_short(
-    index: int, highlight: dict, url: str,
+    index: int, highlight: dict, source: dict,
     output_dir: str, srt_path: str, config: dict
 ) -> dict | None:
     """단일 쇼츠 영상 처리"""
@@ -569,7 +500,7 @@ def process_short(
     # 캐시 키 = 영상ID + 번호 + 구간 경계.
     # 경계가 빠지면 highlights 수정 후 stale 구간을 재사용하고,
     # 영상ID가 빠지면 다른 영상의 구간을 재사용하는 사고가 난다.
-    cached = (os.path.join(cache_dir, f"seg_{_video_id(url)}_{index:02d}_{start:.1f}-{end:.1f}.mp4")
+    cached = (os.path.join(cache_dir, f"seg_{source_key(source)}_{index:02d}_{start:.1f}-{end:.1f}.mp4")
               if cache_dir else None)
 
     width = config.get("width", 1080)
@@ -604,9 +535,9 @@ def process_short(
             print(f"  1/4 캐시된 구간 사용 ({os.path.basename(cached)})...")
             shutil.copy2(cached, raw_path)
         else:
-            print(f"  1/4 구간 다운로드 중...")
-            if not download_section(url, start, end, raw_path):
-                print(f"  건너뜀: 다운로드 실패")
+            print(f"  1/4 구간 {'자르는' if source.get('video') else '다운로드'} 중...")
+            if not acquire_section(source, start, end, raw_path):
+                print(f"  건너뜀: 구간 확보 실패")
                 return None
             if cached:
                 os.makedirs(cache_dir, exist_ok=True)
@@ -618,9 +549,8 @@ def process_short(
 
         # 2. 자막 준비 — Claude가 재구성한 자막(highlights.json의 subtitles)이 있으면 우선 사용
         print(f"  2/4 자막 준비 중...")
-        font_name = ""
-        if font_path:
-            font_name = os.path.basename(font_path).replace(".ttc", "").replace(".ttf", "")
+        # libass는 글꼴을 family 이름으로 찾는다(파일 이름 'malgunbd'가 아니라 'Malgun Gothic').
+        font_name = (family_for(font_path) or os.path.splitext(os.path.basename(font_path))[0]) if font_path else ""
         ass_path = os.path.join(tmpdir, "sub.ass")
         n_events = 0
         curated_subs = highlight.get("subtitles")
@@ -648,13 +578,13 @@ def process_short(
         print(f"  3/4 세로 레이아웃({layout}) + 자막/후크 합성 중...")
         post_parts = []
         if n_events > 0:
-            post_parts.append(f"ass='{_filter_path(ass_path)}'")
+            fontsdir = f":fontsdir='{_filter_path(os.path.dirname(font_path))}'" if font_path else ""
+            post_parts.append(f"ass='{_filter_path(ass_path)}'{fontsdir}")
 
         hook_text = (hook or title or "").strip()
         if hook_overlay and hook_text:
             hook_txt_path = os.path.join(tmpdir, "hook.txt")
-            with open(hook_txt_path, "w", encoding="utf-8") as f:
-                f.write(wrap_text(hook_text, max_chars=12, max_lines=3))
+            write_drawtext_file(hook_txt_path, wrap_text(hook_text, max_chars=12, max_lines=3))
             post_parts.append(build_hook_drawtext(hook_txt_path, font_path, hook_font_size, hook_duration))
 
         def _run_layout(post: str, tag: str):
@@ -670,10 +600,16 @@ def process_short(
             return run_cmd(cmd, tag)
 
         result = _run_layout(",".join(post_parts), f"layout_short{index:02d}")
+        overlay_ok = True
+        if (result is None or result.returncode != 0) and post_parts:
+            # 메모리 부족 같은 일시 오류가 많으므로 같은 합성을 한 번 더 해 본다
+            print(f"    자막/후크 합성 실패, 한 번 더 시도...")
+            result = _run_layout(",".join(post_parts), f"layout_retry_short{index:02d}")
 
         if result is None or result.returncode != 0:
-            # 자막/후크 합성 실패 시 레이아웃만으로 재시도
-            print(f"    자막/후크 합성 실패, 오버레이 없이 재시도...")
+            # 그래도 실패하면 레이아웃만으로 만들되, 성공으로 숨기지 않고 metadata에 overlay=false로 남긴다
+            overlay_ok = not post_parts
+            print(f"    경고: 자막/후크 합성 실패 — 오버레이 없이 만든다(완성 검사에서 오류로 잡힌다)")
             retry = _run_layout("", f"layout_nosub_short{index:02d}")
             if retry is None or retry.returncode != 0:
                 # ffmpeg -y는 실패해도 부분 파일을 남기므로, 지워서 성공으로 오인되지 않게 한다
@@ -766,8 +702,7 @@ def process_short(
         final_duration = get_duration(final_path)
         print(f"  완료: {final_path} ({final_size:.1f}MB, {final_duration:.0f}s)")
 
-        topic_tag = make_hashtag(title)
-        hashtags = ["#shorts", "#쇼츠"] + ([topic_tag] if topic_tag else [])
+        hashtags = make_hashtags(highlight, title)
 
         return {
             "index": index,
@@ -781,13 +716,16 @@ def process_short(
             "original_end": end,
             "description": f"{hook}\n\n{' '.join(hashtags)}",
             "hashtags": hashtags,
+            "overlay": overlay_ok,
         }
 
 
 def main():
     parser = argparse.ArgumentParser(description="쇼츠 영상 자동 편집")
     parser.add_argument("--highlights", required=True, help="highlights.json 경로")
-    parser.add_argument("--url", required=True, help="원본 YouTube URL")
+    src = parser.add_mutually_exclusive_group(required=True)
+    src.add_argument("--video", help="원본 로컬 영상(권장)")
+    src.add_argument("--url", help="권리를 확인한 YouTube URL(하이라이트 구간만 받는다)")
     parser.add_argument("--output", required=True, help="출력 디렉토리")
     parser.add_argument("--srt", default="", help="전체 SRT 자막 경로")
     parser.add_argument("--config", default="", help="config.yaml 또는 config.json 경로")
@@ -808,6 +746,14 @@ def main():
         help="이미 완성된 쇼츠도 다시 생성 (기본은 건너뜀)"
     )
     args = parser.parse_args()
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # Windows 콘솔에서 한글이 깨지지 않게
+    except Exception:  # noqa: BLE001
+        pass
+    source = {"video": os.path.abspath(args.video)} if args.video else {"url": args.url}
+    if args.video and not os.path.isfile(args.video):
+        print(f"ERROR: 영상 파일이 없습니다: {args.video}")
+        sys.exit(1)
 
     with open(args.highlights, "r", encoding="utf-8") as f:
         highlights = json.load(f)
@@ -917,7 +863,7 @@ def main():
         os.makedirs(cache_dir, exist_ok=True)
         print(f"=== 구간 다운로드 전용 모드 (캐시: {cache_dir}) ===")
         ok = 0
-        vid = _video_id(args.url)
+        vid = source_key(source)
         for highlight in highlights:
             idx = highlight["index"]
             if only and idx not in only:
@@ -929,7 +875,7 @@ def main():
                 ok += 1
                 continue
             print(f"[{idx:02d}] {start:.1f}s-{end:.1f}s 다운로드...")
-            if download_section(args.url, start, end, cached):
+            if acquire_section(source, start, end, cached):
                 ok += 1
             else:
                 print(f"[{idx:02d}] 다운로드 실패")
@@ -941,7 +887,6 @@ def main():
     print(f"출력: {args.output}")
     print(f"해상도: {config['width']}x{config['height']}")
     print(f"레이아웃: {config.get('layout', 'fit_blur')}")
-    print(f"컨테이너: {'예' if is_container_env() else '아니오'}")
     font = get_font_path()
     print(f"한글 폰트: {font or '없음 (시스템 기본)'}")
     print()
@@ -962,8 +907,7 @@ def main():
             print(f"\n--- Short {idx:02d}: 이미 존재 — 건너뜀 (다시 만들려면 --force) ---")
             title = highlight.get("title", f"Short {idx}")
             hook = highlight.get("hook", "")
-            topic_tag = make_hashtag(title)
-            hashtags = ["#shorts", "#쇼츠"] + ([topic_tag] if topic_tag else [])
+            hashtags = make_hashtags(highlight, title)
             results.append({
                 "index": idx,
                 "file": f"short_{idx:02d}.mp4",
@@ -979,7 +923,7 @@ def main():
             })
             continue
 
-        result = process_short(idx, highlight, args.url, args.output, srt_path, config)
+        result = process_short(idx, highlight, source, args.output, srt_path, config)
         if result:
             results.append(result)
         else:
@@ -1022,6 +966,11 @@ def main():
         print(f"실패 목록: {len(failures)}개")
         for f_item in failures:
             print(f"  [{f_item['index']:02d}] {f_item['title']} - {f_item['reason']}")
+    degraded = [r for r in results if r.get("overlay") is False]
+    if degraded:
+        print(f"경고: 자막·후크 없이 만들어진 쇼츠 {len(degraded)}개 — --only <번호> --force로 다시 만든다")
+        for r in degraded:
+            print(f"  [{r['index']:02d}] {r['title']}")
     print(f"총 용량: {total_size:.1f}MB")
     print(f"총 길이: {total_duration:.0f}초")
     print(f"메타데이터: {metadata_path}")

@@ -809,7 +809,23 @@ Phase 0 중 새로 발견해 고친 결함
 | 평가 중 발견·수정 | 공유 숫자 엔진의 영어 단어 뒤 숫자 누락(data-collector에도 해당) 등 10건, 채점기 수정 6건(분석 문서 §3·§4) |
 | 회귀 | `tools/run_regression.py` 43개 검사 통과 |
 
-다음 스킬: generate-shorts (로드맵 순서 6)
+### Phase 1 — generate-shorts — 2026-10-02
+
+증거: `GATES.p1-generate-shorts.md`, 분석: `docs/03-analysis/generate-shorts-phase1.analysis.md`
+
+| 항목 | 결과 |
+|------|------|
+| 재설계 | prepare_source(로컬 영상 + 자막·음성 인식, 권리 확인 URL) → 후보 → 큐레이션 → validate_highlights → generate_shorts(`--video`) → verify_short → 프레임 검수. SKILL.md 251줄 → 145줄 + references 4개 |
+| 정책(D8, §7.1) | 쿠키 자동 사용·User-Agent 위장·무작위 지연·'봇 감지 우회' 안내 삭제, 권리 확인 없는 URL 거부. v1.6.1 코드로 양성 대조 |
+| Windows | 공유 `media.py`(imageio-ffmpeg, ffprobe 없이 정보 읽기, 필터 경로), 맑은 고딕, 현재 파이썬, CRLF 자막 |
+| 실습 | 제3자 방송 자막 대신 자체 제작 강의 영상(106초) + 자막 + 정답표(정보 구간 3·비정보 구간 3) |
+| 비교 평가 | 4개 eval 평균 1.00 대 0.95(v1.6.1). 차이는 권리 미확인 URL에서 자막을 먼저 받으려 한 1개 항목. 시간 평균 249초 대 342초, 토큰 13.1만 대 15.6만 |
+| 점수 밖 차이 | v1.6.1은 쇼츠·카드를 만든 3번 모두 에이전트가 어댑터 코드(4개)를 직접 짰다. 로컬 영상 미지원, ffmpeg·폰트 미검출, 합성 실패를 성공으로 보고 |
+| 평가 중 발견·수정 | 스킬 결함 6건(합성 실패 숨김, Windows 후크 빈 줄, 카드 한글 뭉개짐, 긴 해시태그, 음성 인식 메모리 부족, 순서말 시작), 채점기 1건(분석 문서 §3·§4) |
+| 회귀 | `tools/run_regression.py` 49개 검사 통과 |
+| 남은 것 | 권리를 확인한 자기 채널 URL로 실제 다운로드 확인, 트리거 실측(H10) |
+
+다음 스킬: narration-video (로드맵 순서 7)
 
 ---
 

@@ -32,6 +32,14 @@ INTENDED_REMOVALS = {
     "skills/data-collector/scripts/utils.py": "도메인 판별·키워드 확장 → profiles.py로 대체",
     "skills/data-collector/templates/config.example.yaml": "API 키를 파일에 적는 설정 → 환경변수·Secrets로 대체",
     "skills/data-collector/references/SETUP-GUIDE.md": "README.md·SKILL.md로 통합",
+    "skills/generate-shorts/scripts/setup.sh": "Linux apt·/home/claude 전용 설치 스크립트 → media.py·doctor로 대체(Windows·macOS 지원)",
+    "skills/generate-shorts/reference.md": "references/curation·layouts·card-news·troubleshooting.md로 나눔(봇 감지 우회 절 삭제)",
+    # Phase 1 generate-shorts: 제3자 방송 영상 자동자막으로 만든 오프라인 데모(배포 권리 없음, handoff H3) → 자체 제작 강의 영상으로 교체
+    "skills/generate-shorts/assets/output/highlights.json": "제3자 방송 영상 기반 데모 — 자체 제작 실습 영상(shorts-lecture)으로 교체",
+    "skills/generate-shorts/assets/output/shorts/metadata.json": "제3자 방송 영상 기반 데모 — 자체 제작 실습 영상(shorts-lecture)으로 교체",
+    "skills/generate-shorts/assets/output/transcript.json": "제3자 방송 영상 자동자막 — 자체 제작 실습 영상(shorts-lecture)으로 교체",
+    "skills/generate-shorts/assets/output/transcript.srt": "제3자 방송 영상 자동자막 — 자체 제작 실습 영상(shorts-lecture)으로 교체",
+    "skills/generate-shorts/assets/output/transcript_timestamped.txt": "제3자 방송 영상 자동자막 — 자체 제작 실습 영상(shorts-lecture)으로 교체",
     # Phase 1 content-research 재설계(D1, docs/03-analysis/content-research-phase1.analysis.md)
     "skills/content-research/scripts/content_analyzer.py": "세션 안 Anthropic API 재호출(API 키·이중 과금) → 대화 중인 Claude가 기획",
     "skills/content-research/scripts/main.py": "API 분석 파이프라인 진입점 → feeds·prepare_sources·calendar_slots·verify_plan으로 대체",
@@ -62,7 +70,8 @@ INTENDED_EDITS = {
 }
 SLIMMED_DOCX_DIR = "doc-automation/example/example_3_comany-to-ppt/"  # 내장 글꼴 제거(G12가 별도 검증)
 # Phase 1에서 재설계한 스킬: 파일이 남아 있으면 내용 변경을 허용한다(품질은 각 스킬의 Phase 1 gate가 검증)
-PHASE1_REWRITTEN = {"doc-automation", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research"}
+PHASE1_REWRITTEN = {"doc-automation", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research",
+                    "generate-shorts"}
 
 
 def new_location(old: str) -> Path | None:

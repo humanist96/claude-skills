@@ -28,6 +28,8 @@ OPTIONAL_VENDOR: dict[str, list[str]] = {
     "prepare_sources.py": ["data-collector", "content-research"],
     "numparse.py": ["data-collector", "content-research"],
     "source-tiers.yaml": ["data-collector", "content-research"],
+    # 영상 처리 공용(ffmpeg 찾기·정보·필터 경로·프레임 밝기)
+    "media.py": ["generate-shorts"],
 }
 # shared 모듈을 vendoring 받는 스킬
 VENDOR_TARGETS = LEGACY_SKILLS + ["doctor"]

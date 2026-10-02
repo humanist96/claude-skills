@@ -1,0 +1,85 @@
+{
+  "video": "엑셀팁_강의.mp4",
+  "srt": "엑셀팁_강의.srt",
+  "duration": 106.36,
+  "width": 960,
+  "height": 540,
+  "segments": [
+    {
+      "id": "intro",
+      "start": 0.0,
+      "end": 12.99,
+      "usable": false,
+      "why": "인사·구독 요청뿐, 정보 없음",
+      "first_line": "안녕하세요, 엑셀 한 스푼입니다."
+    },
+    {
+      "id": "xlookup",
+      "start": 13.34,
+      "end": 38.53,
+      "usable": true,
+      "why": "팁 하나가 처음부터 결론(주당 2시간 → 30분)까지 완결",
+      "first_line": "첫 번째, VLOOKUP 대신 XLOOKUP을 쓰세요."
+    },
+    {
+      "id": "table",
+      "start": 38.88,
+      "end": 60.55,
+      "usable": true,
+      "why": "Ctrl+T 하나로 끝나는 독립 팁, 마지막 문장이 공감 포인트",
+      "first_line": "두 번째, 데이터 범위를 표로 만드세요."
+    },
+    {
+      "id": "aside",
+      "start": 60.9,
+      "end": 74.08,
+      "usable": false,
+      "why": "주제와 무관한 잡담",
+      "first_line": "잠깐 다른 얘기를 하자면, 어제 점심에 먹은 김치찌개가 정말 맛있었는데요."
+    },
+    {
+      "id": "flashfill",
+      "start": 74.43,
+      "end": 96.45,
+      "usable": true,
+      "why": "문제 상황 → 해결 → 주의점까지 한 구간에 있음",
+      "first_line": "세 번째, 빠른 채우기입니다."
+    },
+    {
+      "id": "outro",
+      "start": 96.8,
+      "end": 106.0,
+      "usable": false,
+      "why": "앞 내용 요약과 다음 영상 예고",
+      "first_line": "오늘 세 가지만 기억하셔도 엑셀 작업이 훨씬 빨라집니다."
+    }
+  ],
+  "usable": [
+    "xlookup",
+    "table",
+    "flashfill"
+  ],
+  "not_usable": [
+    "intro",
+    "aside",
+    "outro"
+  ],
+  "facts": {
+    "xlookup": [
+      "주당 2시간",
+      "30분"
+    ],
+    "table": [
+      "Ctrl+T(컨트롤 T)"
+    ],
+    "flashfill": [
+      "Ctrl+E(컨트롤 E)"
+    ]
+  },
+  "must_not": [
+    "구독·좋아요 요청을 쇼츠 후크로 쓰기",
+    "김치찌개 잡담 구간 사용",
+    "자료에 없는 수치(예: '10배 빨라진다')"
+  ],
+  "note": "구간 시간은 낭독 길이로 계산한 정확한 값이다. 쇼츠는 15~60초이므로 각 usable 구간을 그대로 쓰거나 문장 경계에서 줄인다."
+}

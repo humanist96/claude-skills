@@ -253,18 +253,30 @@
       "note": "사용·제외 기사와 이유, 신뢰 등급, 상충 수치와 근거, 지시문과 그것이 시킨 거짓 주장, 기사별 숫자, 단어 언급 기사, 투자 질문의 신호·위험."
     },
     {
-      "id": "shorts-offline",
+      "id": "shorts-lecture",
       "skill": "generate-shorts",
       "chapter": 9,
-      "title": "쇼츠 오프라인 데모: 미리 추출한 자막·하이라이트(YouTube 접속 없이 Phase 2b부터 진행)",
-      "kind": "offline-demo",
-      "folder": "9장-쇼츠/output",
+      "title": "쇼츠 실습 강의 영상(자체 제작: 엑셀 팁 3가지, 1분 46초) + 자막",
+      "kind": "input",
+      "folder": "9장-쇼츠",
       "files": [
-        "generate-shorts/output/*.json",
-        "generate-shorts/output/*.srt",
-        "generate-shorts/output/*.txt",
-        "generate-shorts/output/shorts/*"
-      ]
+        "generate-shorts/inputs/엑셀팁_강의.mp4",
+        "generate-shorts/inputs/엑셀팁_강의.srt",
+        "generate-shorts/inputs/lecture_timings.json"
+      ],
+      "note": "슬라이드와 AI 낭독으로 만든 자체 제작 영상이라 권리 문제가 없다. 쇼츠로 쓸 만한 팁 구간 3개와 쓰면 안 되는 구간(인사·잡담·마무리)이 섞여 있다. YouTube 접속 없이 로컬 영상으로 실습한다."
+    },
+    {
+      "id": "shorts-answer-key",
+      "skill": "generate-shorts",
+      "chapter": 9,
+      "title": "쇼츠 실습 정답표(강사·채점용)",
+      "kind": "reference-output",
+      "folder": "9장-쇼츠/강사용",
+      "files": [
+        "generate-shorts/answer_key.json"
+      ],
+      "note": "구간별 시작·끝 시간, 쇼츠로 쓸 구간과 이유, 쓰면 안 되는 구간, 지켜야 할 숫자(주당 2시간 → 30분)."
     },
     {
       "id": "narration-offline",

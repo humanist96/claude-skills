@@ -1,5 +1,8 @@
-# ffmpeg is installed separately (the doctor skill prints the OS-specific command). ASCII-only file.
+# ffmpeg: install with the OS package manager, or 'pip install imageio-ffmpeg' (bundled binary, no admin rights).
+# The doctor skill prints the OS-specific command. Keep this file ASCII-only.
 Pillow==12.3.0
 edge-tts==7.2.8
+imageio-ffmpeg==0.6.0
+# Optional: speech recognition for videos without subtitles (prepare_source.py --stt): pip install faster-whisper
 # yt-dlp: minimum version only, it must track YouTube changes (see tools/pin-exceptions.json).
 yt-dlp>=2026.8.19

@@ -54,8 +54,14 @@ CHECKS = [
     (["tests/check_research_practice.py"], "RESEARCH PRACTICE OK"),
     (["tests/check_research_calendar.py"], "RESEARCH CALENDAR OK"),
     (["tests/check_plan_verify.py"], "PLAN VERIFY CONTROL OK"),
-    (["tools/check_skill_quality.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research"], "SKILL QUALITY OK"),
-    (["tools/check_skillcreator_evals.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research"], "SKILLCREATOR EVALS OK"),
+    (["tests/check_shorts_practice.py"], "SHORTS PRACTICE OK"),
+    (["tests/check_media.py"], "MEDIA OK"),
+    (["tests/check_validate_highlights.py"], "HIGHLIGHTS VALIDATE CONTROL OK"),
+    (["tests/check_shorts_e2e.py"], "SHORTS E2E OK"),
+    (["tests/check_shorts_policy.py"], "SHORTS POLICY OK"),
+    (["tests/check_stt_fallback.py"], "STT FALLBACK OK"),
+    (["tools/check_skill_quality.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research", "generate-shorts"], "SKILL QUALITY OK"),
+    (["tools/check_skillcreator_evals.py", "doc-automation", "hwpx-editor", "excel-automation", "meeting-minutes", "content-repurpose", "data-collector", "content-research", "generate-shorts"], "SKILLCREATOR EVALS OK"),
 ]
 
 
